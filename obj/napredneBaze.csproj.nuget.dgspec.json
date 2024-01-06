@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Anja\\OneDrive\\Radna površina\\napredneBaze\\napredneBaze.csproj": {}
+    "D:\\napredneBaze\\napredneBaze\\napredneBaze.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Anja\\OneDrive\\Radna površina\\napredneBaze\\napredneBaze.csproj": {
+    "D:\\napredneBaze\\napredneBaze\\napredneBaze.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Anja\\OneDrive\\Radna površina\\napredneBaze\\napredneBaze.csproj",
+        "projectUniqueName": "D:\\napredneBaze\\napredneBaze\\napredneBaze.csproj",
         "projectName": "napredneBaze",
-        "projectPath": "C:\\Users\\Anja\\OneDrive\\Radna površina\\napredneBaze\\napredneBaze.csproj",
-        "packagesPath": "C:\\Users\\Anja\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Anja\\OneDrive\\Radna površina\\napredneBaze\\obj\\",
+        "projectPath": "D:\\napredneBaze\\napredneBaze\\napredneBaze.csproj",
+        "packagesPath": "C:\\Users\\nsk4v\\.nuget\\packages\\",
+        "outputPath": "D:\\napredneBaze\\napredneBaze\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Anja\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\nsk4v\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -26,7 +22,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
