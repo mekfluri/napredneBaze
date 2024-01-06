@@ -196,6 +196,26 @@ public class UserController : ControllerBase
         return BadRequest("Pogresan username ili password");
     }
 
+    [HttpDelete]
+    [Route("{userId}")]
+    public async Task<IActionResult> DeleteUser(string userId)
+    {
+        try
+        {
+            // Delete the user and all relationships (both incoming and outgoing)
+            await _client.Cypher.OptionalMatch("(u:User { Id: $userId })-[r]-()")
+                .Delete("u, r")
+                .WithParam("userId", userId)
+                .ExecuteWithoutResultsAsync();
+
+            return Ok("User and relationships deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "Error deleting user and relationships");
+        }
+    }
+
 
     /*[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = "LogedIn, Admin")]*/
