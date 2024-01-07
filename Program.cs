@@ -12,7 +12,7 @@ namespace napredneBaze
             var host = CreateHostBuilder(args).Build();
 
             // Open the default browser with the specified URL
-            var url = "http://127.0.0.1:5501/Front/story.html"; // Update the port as needed
+            var url = "http://127.0.0.1:5501/Front/register-form/register.html"; // Update the port as needed
             OpenBrowser(url);
 
             host.Run();

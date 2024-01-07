@@ -169,19 +169,19 @@ public class UserController : ControllerBase
 
 
     // samo User sa podacima korisnika
-    [AllowAnonymous]
-    [HttpPost]
-    [Route("Login")]
-    public async Task<ActionResult<User>> Login([FromBody] Login log)
+[AllowAnonymous]
+[HttpPost]
+[Route("Login")]
+public async Task<ActionResult<User>> Login([FromBody] Login log)
+{
+    try
     {
         if (ModelState.IsValid)
         {
             var user = await _userManager.FindByNameAsync(log.UserName);
             if (user != null && await _userManager.CheckPasswordAsync(user, log.Password))
             {
-
                 user.Status = true;
-
                 await _userManager.UpdateAsync(user);
 
                 var korisnik = new User
@@ -199,16 +199,47 @@ public class UserController : ControllerBase
                     Status = user.Status
                 };
 
-              
-
-                return Ok(korisnik);
+                var token = GenerateJwtToken(user);
+                return Ok(token);
             }
         }
 
         return BadRequest("Pogresan username ili password");
     }
+    catch (Exception ex)
+    {
+        // Dodajte ispisivanje izuzetka kako biste videli šta je null
+        Console.WriteLine($"Izuzetak prilikom prijave: {ex}");
+        return StatusCode(500, "Došlo je do greške prilikom prijave.");
+    }
+}
+
+   private string GenerateJwtToken(AppUser user)
+{
+    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
+    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+    var claims = new List<Claim>
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        // Dodajte dodatne claim-ove prema vašim potrebama
+    };
+
+    var token = new JwtSecurityToken(
+        _configuration["Jwt:ValidIssuer"],
+        _configuration["Jwt:ValidIssuer"],
+        claims,
+        expires: DateTime.UtcNow.AddHours(1), // Podesite vreme isticanja tokena prema vašim potrebama
+        signingCredentials: credentials
+    );
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
 
+
+    
 
     [Route("LogOut")]
     [HttpPut]
@@ -292,8 +323,8 @@ public class UserController : ControllerBase
                 LastName = applicationUser.LastName.ToString(),
                 UserName = applicationUser.UserName.ToString(),
                 Phone = applicationUser.PhoneNumber.ToString(),
-                Email = applicationUser.Email.ToString()
-
+                Email = applicationUser.Email.ToString(),
+                
             };
             return Ok(retKor);
         }
@@ -439,6 +470,18 @@ public class UserController : ControllerBase
 
         return Ok(users.LastOrDefault());
     }
+
+    [Route("getUserByUsername/{userName}")]
+    [HttpGet]
+    public async Task<IActionResult> GetByUsername(string userName)
+    {
+        var users = await _client.Cypher.Match("(d:User)")
+                                              .Where((User d) => d.UserName == userName)
+                                              .Return(d => d.As<User>()).ResultsAsync;
+
+        return Ok(users.LastOrDefault());
+    }
+
 
     [Route("getUserFriends/{userId}")]
     [HttpGet]
