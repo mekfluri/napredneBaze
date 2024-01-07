@@ -1,3 +1,6 @@
+import { Decode } from "../decode.js";
+
+
 export class user{
     constructor(Name, LastName, Phone, UserName, Password, Email, ProfilePicture, Interests, NumberOfFriends, Status, Horoscope)
     {
@@ -14,31 +17,10 @@ export class user{
         this.Horoscope = Horoscope;
     }
 
-    decodeJwtFromLocalStorage() {
-       
-        const jwtToken = localStorage.getItem("accessToken");
-      
-        if (!jwtToken) {
-          console.error("JWT token not found in local storage");
-          return null;
-        }
-      
-        
-        const [header, payload, signature] = jwtToken.split('.');
-      
-        
-        const decodedHeader = JSON.parse(atob(header));
-        const decodedPayload = JSON.parse(atob(payload));
-      
-        var subClaim = decodedPayload.sub;
- 
-        return subClaim;
-       
-        
-      }
-      
+    
       prikazPodataka(ime){
-         var username = this.decodeJwtFromLocalStorage();
+         var decode = new Decode(); 
+        var username = decode.decodeJwtFromLocalStorage();
 
          console.log(username);
 
