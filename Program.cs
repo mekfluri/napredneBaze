@@ -1,12 +1,7 @@
-
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace napredneBaze
 {
@@ -14,7 +9,13 @@ namespace napredneBaze
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            var host = CreateHostBuilder(args).Build();
+
+            // Open the default browser with the specified URL
+            var url = "http://127.0.0.1:5501/Front/story.html"; // Update the port as needed
+            OpenBrowser(url);
+
+            host.Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -23,5 +24,17 @@ namespace napredneBaze
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+        private static void OpenBrowser(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error opening browser: {ex.Message}");
+            }
+        }
     }
 }

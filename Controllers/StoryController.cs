@@ -14,27 +14,35 @@ public class StoryController : ControllerBase
         _client = client;
     }
 
-    [Route("createStory/{userId}")]
+
+    [Route("createStory/{userId}/{tekst}")]
     [HttpPost]
-    public async Task<IActionResult> CreateStory(string userId, [FromBody] Story story)
+    public async Task<IActionResult> CreateStory(string userId, string tekst)
     {
-        if (string.IsNullOrEmpty(userId) || story == null)
+        if (string.IsNullOrEmpty(userId))
         {
-            return BadRequest("Invalid userId or story data");
+            return BadRequest("Invalid userId");
         }
 
-        var userExists = await _client.Cypher
-            .Match("(u:User)")
-            .Where((User u) => u.Id == userId)
-            .Return(u => u.As<User>())
-            .ResultsAsync;
+        // Retrieve story data from query string or route parameters
+        string storyText = tekst; // Assuming story content is in the `tekst` route parameter
 
-        if (!userExists.Any())
+        // Validate story data (if applicable)
+        if (string.IsNullOrEmpty(storyText))
         {
-            return BadRequest("User not found");
+            return BadRequest("Story content is required");
         }
 
+        // Create a Story object with the retrieved data
+        Story story = new Story
+        {
+            Creator = userId,
+            Url = storyText, // Assuming Url is intended for storyText
+            Id = Guid.NewGuid(),
+            DateTimeCreated = DateTime.Now
+        };
         story.Creator = userId;
+        story.Url = tekst;
 
         story.Id = Guid.NewGuid();
         story.DateTimeCreated = DateTime.Now;
@@ -53,7 +61,7 @@ public class StoryController : ControllerBase
             .Merge("(usr)-[:Published]->(s)")
             .ExecuteWithoutResultsAsync();
 
-        return Ok("");
+        return Ok(new { success = true, message = "Story created successfully" });
     }
 
 
@@ -143,8 +151,8 @@ public class StoryController : ControllerBase
 
         return Ok(allStories);
     }
-    
-   
+
+
 
     [Route("getLikesCount/{storyId}")]
     [HttpGet]
