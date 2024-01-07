@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authentication;
 using Neo4j.Driver;
 using Neo4jClient;
 using Neo4jClient.Cypher;
@@ -29,17 +29,18 @@ public class UserController : ControllerBase
     private IConfiguration _configuration;
 
 
+
     public UserController(IGraphClient client, UserManager<AppUser> userManager, IConfiguration configuration)
     {
         _client = client;
         _userManager = userManager;
         _configuration = configuration;
-       
-        
+
+
 
     }
 
-    
+
     [Route("getMaxId")]
     [HttpGet]
     public async Task<string> getMaxId()
@@ -53,7 +54,7 @@ public class UserController : ControllerBase
                         .Return(id => id.As<string>()).ResultsAsync;
 
         var lista = str.Any();
-        
+
         if (lista)
         {
             var s = str.Single();
@@ -67,43 +68,43 @@ public class UserController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllUsers()
     {
-        var users = await _client.Cypher.Match("(n: User)")
-                                              .Return(n => n.As<User>()).ResultsAsync;
+        var users = await _client.Cypher
+            .Match("(n:User)")
+            .Return(n => new
+            {
+                UserId = n.As<User>().Id,
+                Username = n.As<User>().UserName,
+                Password = n.As<User>().Password,
+                Status = n.As<User>().Status
+            })
+            .ResultsAsync;
 
         return Ok(users);
     }
 
-    [Route("getUserById/{id}")]
-    [HttpGet]
-    public async Task<IActionResult> GetById(string id)
-    {
-        var users = await _client.Cypher.Match("(d:User)")
-                                              .Where((User d) => d.Id == id)
-                                              .Return(d => d.As<User>()).ResultsAsync;
 
-        return Ok(users.LastOrDefault());
-    }
+  
 
-/*
-    [Route("createUser")]
-    [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] AppUser user)
-    {
+    /*
+        [Route("createUser")]
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody] AppUser user)
+        {
 
-        string result = getMaxId().Result;
-        int resultInt = Int32.Parse(result);
-        resultInt += 1;
-        result = resultInt.ToString();
-        //user.Id = result;
+            string result = getMaxId().Result;
+            int resultInt = Int32.Parse(result);
+            resultInt += 1;
+            result = resultInt.ToString();
+            //user.Id = result;
 
 
 
-        await _client.Cypher.Create("(d:User $user)")
-                            .WithParam("user", user)
-                            .ExecuteWithoutResultsAsync();
+            await _client.Cypher.Create("(d:User $user)")
+                                .WithParam("user", user)
+                                .ExecuteWithoutResultsAsync();
 
-        return Ok();
-    }*/
+            return Ok();
+        }*/
 
 
 
@@ -123,7 +124,7 @@ public class UserController : ControllerBase
             if (userEmail != null)
                 return BadRequest("Ovaj email je vec u upotrebi!");
 
-            var applicationUser = new  AppUser
+            var applicationUser = new AppUser
             {
 
                 Name = reg.Name,
@@ -132,7 +133,7 @@ public class UserController : ControllerBase
                 UserName = reg.UserName,
                 //Hhoroscope = reg.horoscope
                 //Number = reg.Phone
-            } ;
+            };
 
 
 
@@ -141,7 +142,7 @@ public class UserController : ControllerBase
 
 
 
-           
+
 
 
 
@@ -179,22 +180,54 @@ public class UserController : ControllerBase
             if (user != null && await _userManager.CheckPasswordAsync(user, log.Password))
             {
 
-                var korisnik = new User();
-                korisnik.Id = user.Id;
-                korisnik.Name = user.Name;
-                korisnik.LastName = user.LastName;
-                korisnik.UserName = user.UserName;
-                korisnik.Email = user.Email;
-                korisnik.Phone = user.PhoneNumber;
-                korisnik.NumbersOfFriends = user.NumbersOfFriends;
-                korisnik.Interests = user.Interests;
-                korisnik.ProfilePicture = user.ProfilePicture;
-                korisnik.Horoscope = user.Horoscope;
+                user.Status = true;
+
+                await _userManager.UpdateAsync(user);
+
+                var korisnik = new User
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    LastName = user.LastName,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Phone = user.PhoneNumber,
+                    NumbersOfFriends = user.NumbersOfFriends,
+                    Interests = user.Interests,
+                    ProfilePicture = user.ProfilePicture,
+                    Horoscope = user.Horoscope,
+                    Status = user.Status
+                };
+
+              
+
                 return Ok(korisnik);
             }
         }
+
         return BadRequest("Pogresan username ili password");
     }
+
+
+
+    [Route("LogOut")]
+    [HttpPut]
+    public async Task<IActionResult> UpdateStatus()
+    {
+        await _client.Cypher
+            .Match("(u:User)")
+            .Where((User u) => u.Status == true)
+            .Set("u.Status = false")
+            .ExecuteWithoutResultsAsync();
+
+
+        return Ok($"User is now logged out.");
+    }
+
+
+
+
+
 
     [HttpDelete]
     [Route("{userId}")]
@@ -217,6 +250,7 @@ public class UserController : ControllerBase
     }
 
 
+
     /*[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = "LogedIn, Admin")]*/
     [HttpPut]
@@ -228,7 +262,7 @@ public class UserController : ControllerBase
         if (applicationUser != null)
         {
             applicationUser.ProfilePicture = kor.ProfilePicture;
-            applicationUser.Interests= kor.Interests;
+            applicationUser.Interests = kor.Interests;
             if (!string.IsNullOrWhiteSpace(kor.Name))
             {
                 applicationUser.Name = kor.Name;
@@ -268,7 +302,7 @@ public class UserController : ControllerBase
 
 
 
-     
+
     [Route("addFriend/{userId}/{friendId}")]
     [HttpPut]
     public async Task<IActionResult> addFriend(string userId, string friendId)
@@ -282,22 +316,22 @@ public class UserController : ControllerBase
                             //.Call("return exists((n) -[:Liked]->(:Post))")
                             .Return(ret => ret.As<bool>()).ResultsAsync;
 
-        if(following.Single())
+        if (following.Single())
         {
             return Ok("Vec pratite korisnika");
 
         }
         else
         {
-           /* await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
-                                .Where((User usr1) => usr1.Id == userId)
-                                .AndWhere((User usr2) => usr2.Id == friendId)
-                                .Create("(usr1)-[r:je_prijatelj]->(usr2)")
-                                .Create("(usr2)-[r1:je_prijatelj]->(usr1)")
-                                .Set("usr1.NumbersOfFriends = usr1.NumbersOfFriends+1")
-                                .Set("usr2.NumbersOfFriends = usr2.NumbersOfFriends+1")
-                                .ExecuteWithoutResultsAsync();*/
-            
+            /* await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
+                                 .Where((User usr1) => usr1.Id == userId)
+                                 .AndWhere((User usr2) => usr2.Id == friendId)
+                                 .Create("(usr1)-[r:je_prijatelj]->(usr2)")
+                                 .Create("(usr2)-[r1:je_prijatelj]->(usr1)")
+                                 .Set("usr1.NumbersOfFriends = usr1.NumbersOfFriends+1")
+                                 .Set("usr2.NumbersOfFriends = usr2.NumbersOfFriends+1")
+                                 .ExecuteWithoutResultsAsync();*/
+
             // Dodavanje dvostrane veze "je_prijatelj" između dva korisnika
             await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
                                 .Where((User usr1) => usr1.Id == userId)
@@ -305,18 +339,18 @@ public class UserController : ControllerBase
                                 .Create("(usr1)-[:je_prijatelj]->(commonFriend:User)<-[:je_prijatelj]-(usr2)")
                                 .ExecuteWithoutResultsAsync();
 
-            
+
             return Ok();
 
         }
-        
 
 
-        
-        
 
-        
-       
+
+
+
+
+
     }
 
 
@@ -333,7 +367,7 @@ public class UserController : ControllerBase
                             //.Call("return exists((n) -[:Liked]->(:Post))")
                             .Return(ret => ret.As<bool>()).ResultsAsync;
 
-        if(following.Single())
+        if (following.Single())
         {
             await _client.Cypher.Match("(usr1:User)-[r:je_prijatelj]->(usr2)")
                            .Where((User usr1) => usr1.Id == userId)
@@ -342,7 +376,7 @@ public class UserController : ControllerBase
                            .Set("usr2.NumbersOfFriends = usr2.NumbersOfFriends-1")
                            .Set("usr1.NumbersOfFriends = usr1.NumbersOfFriends-1")
                            .ExecuteWithoutResultsAsync();
-            
+
             await _client.Cypher.Match("(usr2:User)-[r1:je_prijatelj]->(usr1)")
                            .Where((User usr1) => usr1.Id == userId)
                            .AndWhere((User usr2) => usr2.Id == friendId)
@@ -352,57 +386,68 @@ public class UserController : ControllerBase
         }
         else
         {
-           return Ok("Ne pratite korisnika");
+            return Ok("Ne pratite korisnika");
 
         }
-        
 
 
 
-        
+
+
 
         return Ok();
-       
-    }
-     /*
-    //da user izbaci svog followera
-    [Route("removeMyFollower/{myId}/{followerId}")]
-    [HttpPut]
-    public async Task<IActionResult> removeMyFollower(string myId, string followerId)
-    {
-        await _client.Cypher.Match("(usr1:User)-[r:Following]->(usr2)")
-                          .Where((User usr1) => usr1.Id == followerId)
-                          .AndWhere((User usr2) => usr2.Id == myId)
-                          .Delete("r")
-                          .Set("usr2.NumbersOfFollowers = usr2.NumbersOfFollowers-1")
-                          .Set("usr1.NumbersOfFollowings = usr1.NumbersOfFollowings-1")
-                          .ExecuteWithoutResultsAsync();
-
-        return Ok(); 
 
     }
-    */
+    /*
+   //da user izbaci svog followera
+   [Route("removeMyFollower/{myId}/{followerId}")]
+   [HttpPut]
+   public async Task<IActionResult> removeMyFollower(string myId, string followerId)
+   {
+       await _client.Cypher.Match("(usr1:User)-[r:Following]->(usr2)")
+                         .Where((User usr1) => usr1.Id == followerId)
+                         .AndWhere((User usr2) => usr2.Id == myId)
+                         .Delete("r")
+                         .Set("usr2.NumbersOfFollowers = usr2.NumbersOfFollowers-1")
+                         .Set("usr1.NumbersOfFollowings = usr1.NumbersOfFollowings-1")
+                         .ExecuteWithoutResultsAsync();
 
-    [Route("getUserByUsername/{userName}")]
+       return Ok(); 
+
+   }
+   */
+    [Route("getUserCurrent")]
     [HttpGet]
-    public async Task<IActionResult> GetUserByUsername(string userName)
+    public async Task<IActionResult> GetUserCurrent()
+    {
+        var users = await _client.Cypher
+              .Match("(d:User)")
+              .Where((User d) => d.Status == true)
+              .Return(d => d.As<User>())
+              .ResultsAsync;
+
+        return Ok(users.LastOrDefault());
+    }
+
+    [Route("getUserById/{id}")]
+    [HttpGet]
+    public async Task<IActionResult> GetById(string id)
     {
         var users = await _client.Cypher.Match("(d:User)")
-        .Where((User d) => d.UserName == userName)
-        .Return(d => d.As<User>()).ResultsAsync; 
-        
-        return Ok(users.FirstOrDefault());
+                                              .Where((User d) => d.Id == id)
+                                              .Return(d => d.As<User>()).ResultsAsync;
 
-
+        return Ok(users.LastOrDefault());
     }
-     
+
     [Route("getUserFriends/{userId}")]
     [HttpGet]
     public async Task<IEnumerable<object>> getUserFriends(string userId)
     {
         var users = await _client.Cypher.Match("(d:User)-[je_prijatelj]->(f:User)")
                                               .Where((User d) => d.Id == userId)
-                                              .Return(f => new {
+                                              .Return(f => new
+                                              {
                                                   Id = f.As<User>().Id,
                                                   UserName = f.As<User>().UserName,
                                                   Email = f.As<User>().Email,
@@ -410,7 +455,7 @@ public class UserController : ControllerBase
                                                   Interests = f.As<User>().Interests
 
                                               }).ResultsAsync;
-                                              //f.As<User>().UserName).ResultsAsync;//f.As<User>()).ResultsAsync;
+        //f.As<User>().UserName).ResultsAsync;//f.As<User>()).ResultsAsync;
 
         return users;
     }
@@ -420,7 +465,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetUserFriendsCount(string userId)
     {
         var users = await _client.Cypher.Match("(d:User)-[Following]->(f:User)")
-            
+
                                               .Where((User d) => d.Id == userId)
                                               .Return(f => f.As<User>()).ResultsAsync;
 
@@ -440,9 +485,9 @@ public class UserController : ControllerBase
              .ResultsAsync;
 
         return Ok(result.ToList());
-    
-    
-    
+
+
+
     }
 
 

@@ -19,10 +19,12 @@ namespace napredneBaze.Models
         public string Interests { get; set; } = String.Empty;
 
         public int NumbersOfFriends { get; set; } = 0;
-        
-        public string Horoscope {get; set;} = String.Empty;
- 
 
-    
+        public string Horoscope { get; set; } = String.Empty;
+
+        public bool Status { get; set; } = false;
+
+
+
     }
 }

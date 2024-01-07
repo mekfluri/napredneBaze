@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Post Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+<section class="ftco-section">
+    <div class="container">
+        <div class="row justify-content-center">
+        </div>
+       <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="login-wrap p-4 p-md-5">
+                    <h3 class="text-center mb-4">Napišite svoj stori:</h3>
+                    <form action="#" class="login-form" id="storyForm">
+                        <div class="form-group">
+                            <textarea id="storyContent" class="form-control rounded-left" rows="5" placeholder="Your post content" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" onclick="submitStory()" class="btn btn-primary rounded submit px-4">Postavi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+function submitStory() {
+    fetch('http://localhost:5142/User/getUserCurrent', {
+        method: 'GET',
+        credentials: 'include', // Include credentials for cookie transmission (session)
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            const userId = data.id; // Assuming the user ID is available in the response, adjust accordingly
+
+            if (userId) {
+                console.log('Successfully fetched user ID:', userId);
+
+                // Continue with creating the story
+                const storyContent = document.getElementById("storyContent").value;
+
+                // Use backticks for template literals
+               fetch(`http://localhost:5142/Story/createStory/${userId}/${storyContent}`, {
+                         method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                // Add any other headers if needed
+                            },
+                            // Add body if your endpoint expects data in the request body
+                            // body: JSON.stringify({ /* your data */ }),
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                                }
+                                const contentType = response.headers.get('content-type');
+                                if (contentType && contentType.includes('application/json')) {
+                                return response.json(); 
+                                } else {
+                                throw new Error('Response is not in JSON format');
+                                }
+                            })
+                            .then(data => {
+                                console.log('Success:', data);
+                            })
+                            .catch(error => {
+                                console.error('Error:', error.message);
+                            });
+            } else {
+                console.error('User ID not available in the response');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user ID:', error);
+        });
+}
+
+</script>
+<script src="js/jquery.min.js"></script>
+<script src="js/popper.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+
+</body>
+</html>

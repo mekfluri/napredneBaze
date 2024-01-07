@@ -26,10 +26,12 @@ public class User
 
     public int NumbersOfFriends { get; set; } = 0;
 
+    public bool Status { get; set; } = false;
+
     public string Horoscope { get; set; } = String.Empty;
 
 
-   
+
 
 
 

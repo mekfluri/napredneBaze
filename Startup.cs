@@ -73,13 +73,12 @@ namespace napredneBaze
 
             services.AddCors(options =>
             {
-                options.AddPolicy("CORS", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
-                });
+                options.AddPolicy("CORS", builder => builder.WithOrigins("http://127.0.0.1:5501") 
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials());
             });
+         
 
             services.AddSwaggerGen(options =>
             {
