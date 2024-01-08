@@ -279,7 +279,8 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
             return StatusCode(500, "Error deleting user and relationships");
         }
     }
-
+    
+    
 
 
     /*[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -292,8 +293,9 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
         if (applicationUser != null)
         {
-            applicationUser.ProfilePicture = kor.ProfilePicture;
+           
             applicationUser.Interests = kor.Interests;
+            applicationUser.Horoscope = kor.Horoscope;
             if (!string.IsNullOrWhiteSpace(kor.Name))
             {
                 applicationUser.Name = kor.Name;
@@ -303,6 +305,14 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
             if (!string.IsNullOrWhiteSpace(kor.Phone))
                 applicationUser.PhoneNumber = kor.Phone;
+            
+            if (!string.IsNullOrWhiteSpace(kor.UserName))
+                applicationUser.UserName = kor.UserName;
+            
+              if (!string.IsNullOrWhiteSpace(kor.Email))
+                applicationUser.Email = kor.Email;
+
+            
 
             if (ModelState.IsValid)
             {
@@ -324,6 +334,8 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
                 UserName = applicationUser.UserName.ToString(),
                 Phone = applicationUser.PhoneNumber.ToString(),
                 Email = applicationUser.Email.ToString(),
+                Interests = applicationUser.Interests.ToString(),
+                Horoscope = applicationUser.Horoscope.ToString()
                 
             };
             return Ok(retKor);
@@ -354,21 +366,21 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         }
         else
         {
-            /* await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
+             await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
                                  .Where((User usr1) => usr1.Id == userId)
                                  .AndWhere((User usr2) => usr2.Id == friendId)
                                  .Create("(usr1)-[r:je_prijatelj]->(usr2)")
                                  .Create("(usr2)-[r1:je_prijatelj]->(usr1)")
                                  .Set("usr1.NumbersOfFriends = usr1.NumbersOfFriends+1")
                                  .Set("usr2.NumbersOfFriends = usr2.NumbersOfFriends+1")
-                                 .ExecuteWithoutResultsAsync();*/
+                                 .ExecuteWithoutResultsAsync();
 
             // Dodavanje dvostrane veze "je_prijatelj" između dva korisnika
-            await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
+            /*await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
                                 .Where((User usr1) => usr1.Id == userId)
                                 .AndWhere((User usr2) => usr2.Id == friendId)
                                 .Create("(usr1)-[:je_prijatelj]->(commonFriend:User)<-[:je_prijatelj]-(usr2)")
-                                .ExecuteWithoutResultsAsync();
+                                .ExecuteWithoutResultsAsync();*/
 
 
             return Ok();
@@ -478,7 +490,8 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         var users = await _client.Cypher.Match("(d:User)")
                                               .Where((User d) => d.UserName == userName)
                                               .Return(d => d.As<User>()).ResultsAsync;
-
+        
+       
         return Ok(users.LastOrDefault());
     }
 
@@ -532,6 +545,8 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
 
     }
+
+    
 
 
 

@@ -10,28 +10,20 @@ body {
     
 }
 
-.username{
-    color: #8E24AA;
-    font-size: 30px;
-   
-
-}
-
-
-
-#uploadInput{
-    display: none;
-}
-
 .row{
     margin:20px;
- 
 }
 
 h5{
     font-size: 25px;
 }
 
+#username{
+    color: #8E24AA;
+    font-size: 30px;
+   
+
+}
 .container {
     text-align: center;
     background-color: #fff;
@@ -48,9 +40,7 @@ h5{
     overflow:hidden;
     border-radius:8px;
     cursor:pointer;
-    width:100%
 }
-
 
 .card:before{
     
@@ -63,41 +53,11 @@ h5{
     background-color:#E1BEE7;
     transform:scaleY(1);
     transition:all 0.5s;
-    transform-origin: bottom;
+    transform-origin: bottom
+}
+
+.card p-3 py-4{
    
-}
-
-.col-md-7{
-    display: flex;
-    flex-direction: row; 
-     
-    justify-content: space-around;
-    width: 100%;
-}
-
-#mojDiv{
-    display: none;
-   
-}
-#edit, #filtriranje, #editPhoto {
-    border:1px solid #8E24AA !important;
-    background-color:#8E24AA;
-    color:#fff;
-     height:40px;
-}
-
-
-#polje1{
-    margin: 10px;
-}
-
-#polje2, #polje3,#polje4, #polje5, #polje6, #polje7 {
-    margin: 10px;
-}
-
-.promene{
-    display: flex;
-    flex-direction: column; 
 }
 
 .card:after{

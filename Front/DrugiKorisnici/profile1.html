@@ -3,7 +3,7 @@
 
 <head>
     <!-- Ostali elementi head-a -->
-    <link rel="stylesheet" href="./profile.css">
+    <link rel="stylesheet" href="./profile1.css">
 </head>
 
 <body>
@@ -16,7 +16,7 @@
             <div class="col-md-6 offset-md-3">
                 <form class="form-inline">
                     <input id="searchInput" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                    <button  class="buttons button:nth-child" id="filtriranje" type="button">Search</button>
+                    <button  id="filtriranje"  type="submit">Search</button>
                 </form>
             </div>
         </div>
@@ -28,29 +28,21 @@
         
             <div class="col-md-7">
             
-               
                 <div class="card p-3 py-4">
-                    
+                
                     <div class="text-center">
-                        
                         <img src="slika.jpg" width="100" class="rounded-circle">
-                        
-                   
                     </div>
                     
-                    <button  id="editPhoto" class="btn btn-primary px-4 ms-3">Update photo</button>
-                    <input class="btn btn-primary px-4 ms-3" type="file" id="uploadInput" accept="image/*">
                     <div class="text-center mt-3">
                         <span class="bg-secondary p-1 px-4 rounded text-white"></span>
                         <h5 class="mt-2 mb-0" id="ime"></h5>
-                        <span id="username" class="username"></span>
-                        
+                        <span id="username"></span>
                         
                         <div class="px-4 mt-1">
                             <p class="fonts" id="interesovanja"> </p>
-                            <p class="fonts" id="horoskop"> </p>
                             <p class="fonts" id="email"> </p>
-                           
+                            <p class="fonts" id="horoskop"> </p>
                         
                         </div>
                         
@@ -65,23 +57,12 @@
                         <div class="buttons">
                             
                             <button class="btn btn-outline-primary px-4">Message</button>
-                            <button  id="editProfile" class="btn btn-primary px-4 ms-3">Edit profile</button>
+                            <button class="btn btn-primary px-4 ms-3">Contact</button>
                         </div>
                         
                         
                     </div>
                 
-                </div>
-                <div class="promene" id="mojDiv">
-                    <input type="text" id="polje1" placeholder="Unesite ime`">
-                    <input type="text" id="polje2" placeholder="Unesite prezime">
-                    <input type="text" id="polje3" placeholder="Unesite username">
-                    <input type="text" id="polje4" placeholder="Unesite horoskop`">
-                    <input type="text" id="polje5" placeholder="Unesite interesovanja">
-                    <input type="text" id="polje6" placeholder="Unesite email`">
-                   
-                    <button  id="edit" class="btn btn-primary px-4 ms-3">Update</button>
-                     
                 </div>
                 
             </div>
@@ -90,6 +71,6 @@
     
     </div>
 </body>
-<script type="module" src="profile.js"></script>
-<script type="module" src="user.js"></script>
+<script type="module" src="profile1.js"></script>
+<script type="module" src="user1.js"></script>
 </html>

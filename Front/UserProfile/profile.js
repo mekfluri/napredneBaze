@@ -1,5 +1,5 @@
-import  { user } from "./user.js"
+import  { User } from "./user.js"
 
-var user1 = new user();
+var user2 = new User();
 
-user1.prikazPodataka();
+user2.prikazPodataka();
