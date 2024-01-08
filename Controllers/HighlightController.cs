@@ -99,11 +99,11 @@ namespace napredneBaze.Controllers
             try
             {
                 var highlights = await _client.Cypher
-                    .Match("(u:User { Id: $userId })-[:HAS_HIGHLIGHT]->(h:Highlight)")
-                    .WithParam("userId", userId)
-                    .Where("EXISTS((u)-[:PUBLISHED]->(s:Story)<-[:HAS_STORY]-(h))")
-                    .Return(h => h.As<Highlight>())
-                    .ResultsAsync;
+                .Match("(u:User { Id: $userId })-[:HAS_HIGHLIGHT]->(h:Highlight)")
+                .WithParam("userId", userId)
+                .Return(h => h.As<Highlight>())
+                .ResultsAsync;
+
 
                 return Ok(highlights);
             }

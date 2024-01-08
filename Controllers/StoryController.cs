@@ -64,6 +64,42 @@ public class StoryController : ControllerBase
         return Ok(new { success = true, message = "Story created successfully" });
     }
 
+    [Route("updateStory/{storyId}/{newText}")]
+    [HttpPut]
+    public async Task<IActionResult> UpdateStory(string storyId, string newText)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(storyId) || string.IsNullOrEmpty(newText))
+            {
+                return BadRequest("Invalid storyId or newText");
+            }
+
+            var storyExists = await _client.Cypher
+                .Match("(s:Story { Id: $storyId })")
+                .WithParam("storyId", storyId)
+                .Return(s => s.As<Story>())
+                .ResultsAsync;
+
+            if (!storyExists.Any())
+            {
+                return NotFound("Story not found");
+            }
+
+            await _client.Cypher
+                .Match("(s:Story { Id: $storyId })")
+                .WithParam("storyId", storyId)
+                .Set("s.Url = $newText")
+                .WithParam("newText", newText)
+                .ExecuteWithoutResultsAsync();
+
+            return Ok(new { success = true, message = "Story updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+        }
+    }
 
 
     [Route("deleteStory/{storyId}")]
@@ -180,17 +216,28 @@ public class StoryController : ControllerBase
 
 
 
-    [Route("getAllStories")]
+    [Route("getAllStories/{userId}")]
     [HttpGet]
-    public async Task<IActionResult> GetAllStories()
+    public async Task<IActionResult> GetAllStories(string userId)
     {
-        var allStories = await _client.Cypher
-            .Match("(s:Story)")
-            .Return(s => s.As<Story>())
-            .ResultsAsync;
+        try
+        {
+            var userStories = await _client.Cypher
+                .Match("(u:User)-[:Published]->(s:Story)")
+                .Where((User u) => u.Id == userId)
+                .Return(s => s.CollectAs<Story>())
+                .ResultsAsync;
 
-        return Ok(allStories);
+            return Ok(userStories);
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions appropriately
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+        }
     }
+
+
     [Route("likeStory/{storyId}/{userId}")]
     [HttpPost]
     public async Task<IActionResult> LikeStory(string storyId, string userId)
@@ -240,12 +287,13 @@ public class StoryController : ControllerBase
 
 
 
+
         var likedRelationshipExists = await _client.Cypher
-            .Match("(usr:User)-[:Liked]->(s:Story { Id: $storyId })")
-            .Where((User usr) => usr.Id == userId)
-            .AndWhere((Story s) => s.Id.ToString() == storyId)
-            .Return(usr => usr.As<User>())
-            .ResultsAsync;
+        .Match("(usr:User)-[:Liked]->(s:Story)")
+        .Where((User usr) => usr.Id == userId)
+        .AndWhere((Story s) => s.Id.ToString() == storyId)
+        .Return(usr => usr.As<User>())
+        .ResultsAsync;
 
         if (likedRelationshipExists.Any())
         {
@@ -264,8 +312,25 @@ public class StoryController : ControllerBase
             .Set("s.NumLikes = s.NumLikes + 1")
             .ExecuteWithoutResultsAsync();
 
-        return Ok($"User {userId} liked the story {storyId}");
+
+        var likedStories = await _client.Cypher
+    .Match("(s:Story { Id: $storyId })")
+    .WithParam("storyId", storyId)
+    .Return(s => s.As<Story>())
+    .ResultsAsync;
+
+        var likedStory = likedStories.FirstOrDefault(); 
+
+        if (likedStory != null)
+        {
+            return Ok(likedStory);
+        }
+        else
+        {
+            return NotFound("Story not found after liking");
+        }
     }
+
 
     [Route("unlikeStory/{storyId}/{userId}")]
     [HttpPost]
@@ -325,6 +390,24 @@ public class StoryController : ControllerBase
         return Ok($"User {userId} unliked the story {storyId}");
     }
 
+    [Route("getStoriesByHighlightId/{highlightId}")]
+    [HttpGet]
+    public async Task<IActionResult> GetStoriesByHighlightId(string highlightId)
+    {
+        if (string.IsNullOrEmpty(highlightId))
+        {
+            return BadRequest("Invalid highlightId");
+        }
+
+        var storiesQuery = _client.Cypher
+            .Match("(h:Highlight { Id: $highlightId })<-[:PART_OF_HIGHLIGHT]-(s:Story)")
+            .WithParam("highlightId", highlightId)
+            .Return(s => s.As<Story>());
+
+        var stories = await storiesQuery.ResultsAsync;
+
+        return Ok(stories);
+    }
 
 
 }
