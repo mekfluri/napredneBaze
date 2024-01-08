@@ -345,7 +345,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
 
 
-
+/*
     [Route("addFriend/{userId}/{friendId}")]
     [HttpPut]
     public async Task<IActionResult> addFriend(string userId, string friendId)
@@ -382,19 +382,84 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
                                 .Create("(usr1)-[:je_prijatelj]->(commonFriend:User)<-[:je_prijatelj]-(usr2)")
                                 .ExecuteWithoutResultsAsync();*/
 
-
-            return Ok();
+         /*   return Ok();
 
         }
 
-
-
-
-
-
-
-
     }
+    */
+
+
+    [Route("addFriend/{userId}/{friendId}")]
+    [HttpPut]
+    public async Task<IActionResult> addFriend(string userId, string friendId)
+    {
+        // Check if a friendship already exists
+        var following = await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
+            .Where((User usr1) => usr1.Id == userId)
+            .AndWhere((User usr2) => usr2.Id == friendId)
+            .With("usr1, usr2, exists((usr1)-[:je_prijatelj|REQUESTED_FRIENDSHIP]->(usr2)) as ret")
+            .Return(ret => ret.As<bool>()).ResultsAsync;
+
+        if (following.Single())
+        {
+            return Ok("You are already friends or a request is pending.");
+        }
+
+        // Create the request relationship
+        await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
+            .Where((User usr1) => usr1.Id == userId)
+            .AndWhere((User usr2) => usr2.Id == friendId)
+            .Create("(usr1)-[:REQUESTED_FRIENDSHIP]->(usr2)")
+            .ExecuteWithoutResultsAsync();
+
+        return Ok("Friend request sent.");
+    }
+
+    [Route("acceptFriend/{Posiljaoc}/{Primalac}")]
+    [HttpPut]
+    public async Task<IActionResult> AcceptFriend(string Posiljaoc, string Primalac)
+    {
+        try
+        {
+            var requestExists = await _client.Cypher
+                .Match("(usr1:User)", "(usr2:User)")
+                .Where((User usr1) => usr1.Id == Posiljaoc)
+                .AndWhere((User usr2) => usr2.Id == Primalac)
+                .With("usr1, usr2, exists((usr1)-[:REQUESTED_FRIENDSHIP]->(usr2)) as ret")
+                .Return(ret => ret.As<bool>())
+                .ResultsAsync;
+
+            if (!requestExists.Single())
+            {
+                return NotFound("Friend request not found.");
+            }
+
+
+
+            await _client.Cypher.Match("(usr1:User)-[r:REQUESTED_FRIENDSHIP]->(usr2:User)")
+                        .Where((User usr1) => usr1.Id == Posiljaoc)
+                        .AndWhere((User usr2) => usr2.Id == Primalac)
+                        .Delete("r")  
+                        .Create("(usr1)-[:je_prijatelj]->(usr2)")
+                        .Create("(usr2)-[:je_prijatelj]->(usr1)")
+                        .Set("usr1.NumbersOfFriends = usr1.NumbersOfFriends + 1")
+                        .Set("usr2.NumbersOfFriends = usr2.NumbersOfFriends + 1")
+                        .ExecuteWithoutResultsAsync();
+
+
+
+
+
+
+            return Ok("Friend request accepted.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
+        }
+    }
+
 
 
     [Route("deleteFriend/{userId}/{friendId}")]
@@ -511,10 +576,40 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
                                                   Interests = f.As<User>().Interests
 
                                               }).ResultsAsync;
-        //f.As<User>().UserName).ResultsAsync;//f.As<User>()).ResultsAsync;
+
 
         return users;
     }
+
+    [Route("getFriendRequests/{userId}")]
+    [HttpGet]
+    public async Task<IEnumerable<object>> getFriendRequests(string userId)
+    {
+        try
+        {
+            var requests = await _client.Cypher.Match("(d:User)<-[:REQUESTED_FRIENDSHIP]-(f:User)")
+                                              .Where((User d) => d.Id == userId)
+                .WithParam("userId", userId)  // Make sure to set the parameter correctly
+                .Return(f => new
+                {
+                    Id = f.As<User>().Id,
+                    UserName = f.As<User>().UserName,
+                    Email = f.As<User>().Email,
+                    ProfilePicture = f.As<User>().ProfilePicture,
+                    Interests = f.As<User>().Interests
+
+                }).ResultsAsync;
+
+            return requests;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return Enumerable.Empty<object>();
+        }
+    }
+
+
 
     [Route("getUserFriendsCount/{userId}")]
     [HttpGet]

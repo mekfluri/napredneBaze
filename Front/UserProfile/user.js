@@ -16,9 +16,11 @@ export class User {
         this.Horoscope = Horoscope;
         this.searchButton = document.getElementById("filtriranje");
         this.editButton = document.getElementById("editProfile");
+        this.zahteviButton = document.getElementById("editZahtevi");
         this.edit = document.getElementById("edit");
         this.searchInput = document.getElementById("searchInput");
         this.editPhoto = document.getElementById("editPhoto");
+        this.trenutniID = null;
         this.ime = document.getElementById("ime"); // Dodao sam this.ime
         this.searchButton.addEventListener("click", () => {
             console.log("Kliknuto!");
@@ -28,6 +30,10 @@ export class User {
           
             this.editProfile();
         });
+          this.zahteviButton.addEventListener("click", () => {
+          
+            this.lookZahtevi();
+        });
         this.edit.addEventListener("click", () => {
           
             this.editandSave();
@@ -36,6 +42,7 @@ export class User {
           
             this.editPhoto1();
         });
+
         
     }
 
@@ -98,7 +105,6 @@ export class User {
             });
 
 
-
      
     }
 
@@ -123,7 +129,102 @@ export class User {
        
         
     }
+      lookZahtevi() {
+        var mojDiv = document.getElementById("divZahtevi");
+        mojDiv.style.display = (mojDiv.style.display === "none" || mojDiv.style.display === "") ? "flex" : "none";
+        var zahteviDiv = document.getElementById("Zahtevi");
 
+        this.fetchFriendRequests(); // Call the fetchFriendRequests method using this
+
+        console.log("tusam");
+    }
+
+    fetchFriendRequests() {
+        fetch(`http://localhost:5142/User/getUserCurrent`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data.id);
+            this.trenutniID = data.id;
+            fetch(`http://localhost:5142/User/getFriendRequests/${data.id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(zahteviArray => {
+                console.log(zahteviArray);
+              
+                this.createZahteviDivs(zahteviArray,   document.getElementById("zahteviDiv"));
+            })
+            .catch(error => {
+                console.error('Error while fetching friend requests:', error);
+            });
+        })
+        .catch(error => {
+            console.error('Error while fetching user data:', error);
+        });
+    }
+
+    createZahteviDivs(zahteviArray) {
+        var zahteviDiv = document.getElementById("Zahtevi");
+        zahteviDiv.innerHTML = '';
+
+        zahteviArray.forEach(zahtev => {
+            console.log(zahtev);
+            var newDiv = document.createElement("div");
+            newDiv.className = "zahtev-div";
+            newDiv.innerHTML = '<p>' + zahtev.userName + '</p><button class="prihvati-button" data-zahtev-id="' + zahtev.id + '">Prihvati</button>';
+            zahteviDiv.appendChild(newDiv);
+        });
+
+        zahteviDiv.addEventListener("click", (event) => {
+            if (event.target.classList.contains("prihvati-button")) {
+                var zahtevId = event.target.dataset.zahtevId;
+                this.handleButtonClick(zahtevId);
+            }
+        });
+    }
+
+    handleButtonClick(zahtevId) {
+        console.log(this.trenutniID);
+
+        fetch(`http://localhost:5142/User/acceptFriend/${zahtevId}/${this.trenutniID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.refreshZahteviDiv();
+        })
+        .catch(error => {
+            console.error('Error while accepting friend request:', error);
+        });
+    }
+
+    refreshZahteviDiv() {
+        this.fetchFriendRequests();
+    }
+
+
+    
     editandSave(){
         var ime = document.getElementById("polje1").value;
         var prezime = document.getElementById("polje2").value;
