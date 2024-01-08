@@ -130,7 +130,7 @@ async function Like(storyId,  likesLink) {
         const userData = await userIdResponse.json();
         const userId = userData.id;
 
-        const response = await fetch(`http://localhost:5142/Like/likeStory/${storyId}/${userId}`, {
+        const response = await fetch(`http://localhost:5142/Story/likeStory/${storyId}/${userId}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -139,7 +139,7 @@ async function Like(storyId,  likesLink) {
         });
         console.log("prvi rezultat:", response);
         if (response == null) {
-            response = await fetch(`http://localhost:5142/Like/unlikeStory/${storyId}/${userId}`, {
+            response = await fetch(`http://localhost:5142/Story/unlikeStory/${storyId}/${userId}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

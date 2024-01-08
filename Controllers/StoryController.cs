@@ -101,7 +101,7 @@ public class StoryController : ControllerBase
         }
     }
 
-
+    /*
     [Route("deleteStory/{storyId}")]
     [HttpDelete]
     public async Task<IActionResult> DeleteStory(string storyId)
@@ -121,6 +121,48 @@ public class StoryController : ControllerBase
             .Match("(usr:User)-[p:Published]->(str:Story)")
             .Where((Story str) => str.Id.ToString() == storyId)
             .Delete("p, str")
+            .ExecuteWithoutResultsAsync();
+
+        return Ok();
+    }
+    */
+    [Route("deleteStory/{storyId}")]
+    [HttpDelete]
+    public async Task<IActionResult> DeleteStory(string storyId)
+    {
+        if (string.IsNullOrEmpty(storyId))
+        {
+            return BadRequest("Invalid storyId");
+        }
+
+        var session = _client.Cypher;
+
+        // Prvo obrišite odnose gde je priča označena kao "Published"
+        await session
+            .Match("(usr:User)-[p:Published]->(str:Story)")
+            .Where((Story str) => str.Id.ToString() == storyId)
+            .Delete("p")
+            .ExecuteWithoutResultsAsync();
+
+        // Zatim obrišite odnose gde je priča označena kao "Liked"
+        await session
+            .Match("(:User)-[likedRel:Liked]->(s:Story)")
+            .Where((Story s) => s.Id.ToString() == storyId)
+            .Delete("likedRel")
+            .ExecuteWithoutResultsAsync();
+
+        // Na kraju, obrišite odnose gde je priča označena kao "PartOfHighlights" i samu priču
+        await session
+            .Match("(:User)-[partOfRel:PART_OF_HIGHLIGHTS]->(str:Story)")
+            .Where((Story str) => str.Id.ToString() == storyId)
+            .Delete("partOfRel, str")
+            .ExecuteWithoutResultsAsync();
+
+        // Sada možete obrisati sam čvor (priču)
+        await session
+            .Match("(str:Story)")
+            .Where((Story str) => str.Id.ToString() == storyId)
+            .Delete("str")
             .ExecuteWithoutResultsAsync();
 
         return Ok();

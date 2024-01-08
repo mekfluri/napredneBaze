@@ -19,8 +19,8 @@ export class User {
         this.zahteviButton = document.getElementById("editZahtevi");
         this.edit = document.getElementById("edit");
         this.searchInput = document.getElementById("searchInput");
+        this.dodajStory = document.getElementById("dodajStory");
         this.editPhoto = document.getElementById("editPhoto");
-        this.trenutniID = null;
         this.ime = document.getElementById("ime"); // Dodao sam this.ime
         this.searchButton.addEventListener("click", () => {
             console.log("Kliknuto!");
@@ -42,6 +42,12 @@ export class User {
           
             this.editPhoto1();
         });
+        this.dodajStory.addEventListener("click", () => {
+          
+            this.dodajNoviStory();
+        });
+
+        
 
         
     }
@@ -49,6 +55,8 @@ export class User {
     prikazPodataka() {
         var decode = new Decode();
         var username = decode.decodeJwtFromLocalStorage();
+
+        this.dodaj();
 
         console.log(username);
 
@@ -73,7 +81,6 @@ export class User {
                 this.LastName = data.lastName;
                 this.ime.innerText = data.name + " " + data.lastName; // Ispravio sam document.getElementById("ime") na this.ime
                 var interesovanja = document.getElementById("interesovanja");
-                console.log(data.interests)
                 if (data.interests != undefined) {
                     this.interesovanja = data.interests;
                     interesovanja.innerText = "Interesovanja:" + " " +data.interests;
@@ -104,8 +111,8 @@ export class User {
                 console.error('Error while fetching user data:', error);
             });
 
-
-     
+            
+          
     }
 
     pretraga() {
@@ -139,23 +146,15 @@ export class User {
         console.log("tusam");
     }
 
-    fetchFriendRequests() {
-        fetch(`http://localhost:5142/User/getUserCurrent`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log(data.id);
-            this.trenutniID = data.id;
-            fetch(`http://localhost:5142/User/getFriendRequests/${data.id}`, {
+    async fetchFriendRequests() {
+
+
+            var decode = new Decode();
+            var korisnik = await decode.vratiKorisnika();
+            console.log(korisnik);
+            this.trenutniID = korisnik.id;
+            console.log(this.trenutniID);
+            fetch(`http://localhost:5142/User/getFriendRequests/${this.trenutniID}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,10 +174,7 @@ export class User {
             .catch(error => {
                 console.error('Error while fetching friend requests:', error);
             });
-        })
-        .catch(error => {
-            console.error('Error while fetching user data:', error);
-        });
+        
     }
 
     createZahteviDivs(zahteviArray) {
@@ -225,7 +221,7 @@ export class User {
 
 
     
-    editandSave(){
+    async editandSave(){
         var ime = document.getElementById("polje1").value;
         var prezime = document.getElementById("polje2").value;
         var username = document.getElementById("polje3").value;
@@ -305,5 +301,30 @@ export class User {
             mojfile.style.display = (mojfile.style.display === "none" || mojfile.style.display === "") ? "block" : "none";
 
      }
+
+    async dodaj()
+    {
+        var decode = new Decode();
+        var korisnik = await decode.vratiKorisnika();
+        var userid = korisnik.id;
+        console.log(userid);
+        var contentDiv = document.getElementById("dodaj");
+        const storyIframe = document.createElement('iframe');
+        console.log(this.id);
+        storyIframe.src = `../Highlights/highlight.html?dataId=${userid}`;  //odje menjas
+        storyIframe.style.width = '100%';
+        storyIframe.style.height = '900px'; // Set the height as needed
+
+              
+
+        //contentDiv.appendChild(heading);
+        //contentDiv.appendChild(description);
+        contentDiv.appendChild(storyIframe);
+    }
+    
+    dodajNoviStory(){
+        window.location.href =  window.location.href = location.origin + '/Front/makestory.html';
+    }
+
 
 }

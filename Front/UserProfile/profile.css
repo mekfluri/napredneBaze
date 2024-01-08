@@ -7,6 +7,7 @@ body {
     align-items: flex-start;
     height: 100vh;
     margin: 0;
+
     
 }
 
@@ -75,7 +76,7 @@ h5{
     width: 100%;
 }
 
-#mojDiv{
+#mojDiv, #zahtevi{
     display: none;
    
 }
@@ -89,6 +90,12 @@ h5{
 
 #polje1{
     margin: 10px;
+}
+
+
+#dodaj{
+    margin-top: 100px;
+    
 }
 
 #polje2, #polje3,#polje4, #polje5, #polje6, #polje7 {
@@ -155,4 +162,17 @@ h5{
        background-color:#8E24AA;
        color:#fff;
         height:40px;
+}
+
+#dodajStory{
+    border:1px solid #8E24AA !important;
+       color:#8E24AA;
+       height:40px;
+}
+
+#dodajStory:hover{
+    border:1px solid #8E24AA !important;
+       color:#fff;
+       height:40px;
+       background-color:#8E24AA;
 }

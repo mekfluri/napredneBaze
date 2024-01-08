@@ -1,3 +1,5 @@
+import { Decode } from "http://127.0.0.1:5501/Front/decode.js";
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
       
@@ -21,22 +23,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardBodyDiv.classList.add('card-body');
             cardBodyDiv.id= story.id;
             
-             const button = document.createElement('button');
-            button.classList.add('button');
-            button.textContent = "Obrisi story";
+             const buttonDelete = document.createElement('button');
+            buttonDelete.classList.add('button');
+            buttonDelete.textContent = "Obrisi story";
      
-
-                  button.onclick = async () => {
+            
+                  buttonDelete.onclick = async () => {
                       try {
                             const url = `http://localhost:5142/Story/deleteStory/${story.id}`;
-
-                     await fetch(url, { method: 'DELETE' });
-
-                         location.reload();
+                          console.log(story.id);
+                         
+                            await fetch(url, { method: 'DELETE' });
                          } catch (error) {
                             console.error("Error:", error.message);
                         }
+
+                        location.reload();
                 };
+
+
 
 
 
@@ -44,6 +49,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const buttonEdit = document.createElement('button');
             buttonEdit.classList.add('button');
                 buttonEdit.textContent = "Edit Story";
+
+                const buttonHigh=document.createElement("button");
+                buttonHigh.classList.add("button");
+                buttonHigh.textContent="Dodaj u HighLight";
+
+                //button.onclick
                 
 
 
@@ -144,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                  
                     const result = await Like(cardBodyDiv.id);
+                    location.reload();
                 } catch (error) {
                     console.error(`Error liking story: ${error.message}`);
                 }
@@ -173,7 +185,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardDiv.appendChild(cardFooterDiv);
 
                 cardFooterDiv.appendChild(likesLink);
-                  cardFooterDiv.appendChild(button);
+                  cardFooterDiv.appendChild(buttonDelete);
+                  //cardFooterDiv.appendCHild(buttonHigh);
                      cardFooterDiv.appendChild(buttonEdit);
             colDiv.appendChild(cardDiv);
                 storiesContainer.appendChild(colDiv);
@@ -185,17 +198,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 async function Like(storyId,  likesLink) {
     try {
-        const userIdResponse = await fetch('http://localhost:5142/User/getUserCurrent', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        const userData = await userIdResponse.json();
-        const userId = userData.id;
+        var decode=new Decode();
+        var korisnik=await decode.vratiKorisnika();
 
-        const response = await fetch(`http://localhost:5142/Like/likeStory/${storyId}/${userId}`, {
+        const userId = korisnik.id;
+
+        const response = await fetch(`http://localhost:5142/Story/likeStory/${storyId}/${userId}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -204,7 +212,7 @@ async function Like(storyId,  likesLink) {
         });
         console.log("prvi rezultat:", response);
         if (response == null) {
-            response = await fetch(`http://localhost:5142/Like/unlikeStory/${storyId}/${userId}`, {
+            response = await fetch(`http://localhost:5142/Story/unlikeStory/${storyId}/${userId}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -218,6 +226,7 @@ async function Like(storyId,  likesLink) {
 
        
         return cardBodyDivId;
+       
     } catch (error) {
         console.error(`Error liking story: ${error.message}`);
         return null;

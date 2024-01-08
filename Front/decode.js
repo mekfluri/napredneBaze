@@ -1,6 +1,6 @@
 export class Decode{
-    constructor(){
-        
+    constructor(user){
+        this.user = user;
     }
     decodeJwtFromLocalStorage(){
        
@@ -24,7 +24,39 @@ export class Decode{
        
         
       }
+
+
+      vratiKorisnika() {
+        var username = this.decodeJwtFromLocalStorage();
+
+        return fetch(`http://localhost:5142/User/getUserByUsername/${username}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add any additional headers if needed
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            this.user = data;
+            return this.user;
+        })
+        .catch(error => {
+            console.error('Error while fetching user data:', error);
+        });
+    }
+
+
+    
+
 }
+
 
 
 

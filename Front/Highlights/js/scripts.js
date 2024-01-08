@@ -1,18 +1,12 @@
+import { Decode } from "http://127.0.0.1:5501/Front/decode.js";
+
 const fetchHighlights = async () => {
     var highlightsData;
     try {
-        // Fetch user ID
-        const userIdResponse = await fetch('http://localhost:5142/User/getUserCurrent', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        const userData = await userIdResponse.json();
-        const userId = userData.id;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        var userId = urlParams.get('dataId');
 
-        // Fetch highlights data
         const response = await fetch(`http://localhost:5142/Highlight/getHighlightsFromUser/${userId}`);
          highlightsData = await response.json();
 
@@ -62,7 +56,7 @@ const fetchHighlights = async () => {
          
             try {
                 const storyIframe = document.createElement('iframe');
-                storyIframe.src = `../Story/story.html?dataId=${data.id}`;
+                storyIframe.src = `../Story/story.html?dataId=${data.id}`; 
                 storyIframe.style.width = '100%';
                 storyIframe.style.height = '400px'; // Set the height as needed
 

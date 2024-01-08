@@ -388,6 +388,46 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
     }
     */
+    [Route("checkFriendship/{userId}/{friendId}")]
+    [HttpPut]
+   public async Task<IActionResult> checkFriendship(string userId, string friendId)
+    {
+        
+        var result = await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
+            .Where((User usr1) => usr1.Id == userId)
+            .AndWhere((User usr2) => usr2.Id == friendId)
+            .With("usr1, usr2, exists((usr1)-[:je_prijatelj]->(usr2)) as isFriend, exists((usr1)-[:REQUESTED_FRIENDSHIP]->(usr2)) as hasRequestedFriendship")
+            .Return((usr1, usr2, isFriend, hasRequestedFriendship) => new
+            {
+                IsFriend = isFriend.As<bool>(),
+                HasRequestedFriendship = hasRequestedFriendship.As<bool>()
+            })
+            .ResultsAsync;
+
+        if (result.Any())
+        {
+            var friendshipStatus = result.First();
+
+            if (friendshipStatus.IsFriend)
+            {
+                return Ok(1);
+            }
+            else if (friendshipStatus.HasRequestedFriendship)
+            {
+                return Ok(2);
+            }
+            else
+            {
+                return Ok(3);
+            }
+        }
+        else
+        {
+            return Ok(3);
+        }
+    }
+
+
 
 
     [Route("addFriend/{userId}/{friendId}")]
@@ -589,7 +629,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         {
             var requests = await _client.Cypher.Match("(d:User)<-[:REQUESTED_FRIENDSHIP]-(f:User)")
                                               .Where((User d) => d.Id == userId)
-                .WithParam("userId", userId)  // Make sure to set the parameter correctly
+                .WithParam("userId", userId)  
                 .Return(f => new
                 {
                     Id = f.As<User>().Id,
