@@ -294,8 +294,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         if (applicationUser != null)
         {
            
-            applicationUser.Interests = kor.Interests;
-            applicationUser.Horoscope = kor.Horoscope;
+           
             if (!string.IsNullOrWhiteSpace(kor.Name))
             {
                 applicationUser.Name = kor.Name;
@@ -311,6 +310,14 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
             
               if (!string.IsNullOrWhiteSpace(kor.Email))
                 applicationUser.Email = kor.Email;
+
+            if (!string.IsNullOrWhiteSpace(kor.Interests))
+                applicationUser.Interests = kor.Interests;
+
+            if (!string.IsNullOrWhiteSpace(kor.Horoscope))
+                applicationUser.Horoscope = kor.Horoscope;
+            
+            
 
             
 

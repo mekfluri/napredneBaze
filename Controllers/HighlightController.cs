@@ -85,13 +85,28 @@ namespace napredneBaze.Controllers
                     .WithParam("storyId", storyId)
                     .ExecuteWithoutResultsAsync();
 
-                return Ok($"Story with id {storyId} added to Highlight with id {highlightId}");
+                var responseObj = new
+                {
+                    Message = $"Story with id {storyId} added to Highlight with id {highlightId}",
+                    Success = true
+                };
+
+                return Ok(responseObj);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Error adding story to Highlight");
+                var errorResponseObj = new
+                {
+                    Message = "Error adding story to Highlight",
+                    Success = false,
+                    ErrorDetails = ex.Message 
+                };
+
+                return StatusCode(500, errorResponseObj);
             }
-        }
+        } 
+
+
         [HttpGet]
         [Route("getHighlightsFromUser/{userId}")]
         public async Task<ActionResult<IEnumerable<Highlight>>> GetHighlightsByUserId(string userId)

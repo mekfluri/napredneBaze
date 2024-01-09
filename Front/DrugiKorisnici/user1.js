@@ -24,6 +24,8 @@ export class User1 {
     }
 
     prikazPodataka() {
+
+        this.dodaj();
         this.provera();
         var storedSearchValue = localStorage.getItem('searchValue');
         console.log(storedSearchValue);
@@ -139,13 +141,14 @@ export class User1 {
             })
             .then(data => {
                 console.log(data); 
+                location.reload();
             })
             .catch(error => {
                 console.error('Error while adding friend:', error);
             });
 
         
-
+         
 
     }
 
@@ -186,7 +189,7 @@ export class User1 {
 
         if(statusPrijateljstva == 1){
             this.addRequest.innerHTML = "Ukloni prijatelja";
-            this.addRequest.addEventListener("click", () => this.obrisiPrijatelja());
+            await this.addRequest.addEventListener("click", () => this.obrisiPrijatelja());
         }
         else if(statusPrijateljstva == 2){
             this.addRequest.innerHTML = "Zahtev poslat";
@@ -194,9 +197,11 @@ export class User1 {
         }
         else if(statusPrijateljstva == 3){
             this.addRequest.innerHTML = "Posalji zahtev";
-            this.addRequest.addEventListener("click", () => this.posaljiZahtev());
+            await this.addRequest.addEventListener("click", () => this.posaljiZahtev());
         
         }
+
+        
 
 
     }
@@ -218,6 +223,7 @@ export class User1 {
     
             const data = await response.text();
             console.log(data); 
+            location.reload();
             return data;
             
     
@@ -228,7 +234,22 @@ export class User1 {
         }
     }
 
-    
+    async dodaj()
+    {
+        var korisnikid = localStorage.getItem('searchValue');
+        var contentDiv = document.getElementById("dodaj");
+        const storyIframe = document.createElement('iframe');
+        console.log(this.id);
+        storyIframe.src = `../Highlights/highlight.html?dataId=${korisnikid}`;  //odje menjas
+        storyIframe.style.width = '100%';
+        storyIframe.style.height = '900px'; // Set the height as needed
+
+              
+
+        //contentDiv.appendChild(heading);
+        //contentDiv.appendChild(description);
+        contentDiv.appendChild(storyIframe);
+    }
 
 
 }

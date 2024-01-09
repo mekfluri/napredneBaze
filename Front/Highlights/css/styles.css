@@ -18,8 +18,21 @@
 #storiesContainer {
     display: flex;
     justify-content: space-between;
+   
 }
 
+#tekst1 ,#tekst3{
+  font-family: Arial, sans-serif; /* Koristi Arial font za sve elemente tela stranice */
+  background-color: #f8f8f8; /* Postavi pozadinu tela stranice na svetlo sivu */
+  margin: 20px; 
+ 
+}
+
+#dodajHighDiv{
+  display: none;
+
+
+}
 .story-item {
     width: calc(33.33% - 10px); /* Adjust the width as needed, considering margin */
     margin-bottom: 20px;
@@ -37,7 +50,11 @@
     overflow-y: auto;
 }
 
-
+#dodajH{
+  margin-top: 20px;
+  background-color: white;
+  color: #8A2BE2;
+}
 
 :root {
   --bs-blue: #0d6efd;

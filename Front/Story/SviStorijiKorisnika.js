@@ -41,13 +41,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         location.reload();
                 };
 
+          
+
+                
 
 
 
-
-
-                            const buttonEdit = document.createElement('button');
-            buttonEdit.classList.add('button');
+                const buttonEdit = document.createElement('button');
+                buttonEdit.classList.add('button');
                 buttonEdit.textContent = "Edit Story";
 
                 const buttonHigh=document.createElement("button");
@@ -56,7 +57,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 //button.onclick
                 
+                buttonHigh.onclick = async () => {
+                   
+                    ucitaj(cardBodyDiv, story.id);
+                    
 
+                };
 
 
 
@@ -185,9 +191,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardDiv.appendChild(cardFooterDiv);
 
                 cardFooterDiv.appendChild(likesLink);
-                  cardFooterDiv.appendChild(buttonDelete);
-                  //cardFooterDiv.appendCHild(buttonHigh);
-                     cardFooterDiv.appendChild(buttonEdit);
+                cardFooterDiv.appendChild(buttonDelete);
+                cardFooterDiv.appendChild(buttonHigh);
+                cardFooterDiv.appendChild(buttonEdit);
             colDiv.appendChild(cardDiv);
                 storiesContainer.appendChild(colDiv);
             });
@@ -232,3 +238,126 @@ async function Like(storyId,  likesLink) {
         return null;
     }
 }
+
+async function ucitaj(cardBodyDiv, storyId) {
+   
+    try {
+       
+        const highlights = await getHighlightsByUserId();
+        
+        const divUokviri = document.createElement('div');
+        divUokviri.classList.add('divIzaberi');
+        divUokviri.style.border = '2px solid #007bff'
+        divUokviri.style.padding = '15px';
+        cardBodyDiv.appendChild(divUokviri);  
+        
+
+        const naslov = document.createElement("label");
+        naslov.innerText = "Izaberite gde zelite da dodate story:"
+        divUokviri.appendChild(naslov);
+        
+
+        const divIzaberi = document.createElement('div');
+        divIzaberi.classList.add('divIzaberi');
+        divUokviri.appendChild(divIzaberi);
+
+        const dodajDugme = document.createElement("button");
+        dodajDugme.classList.add("dugmeDodaj");
+        dodajDugme.innerText = "Dodaj"
+        dodajDugme.addEventListener('click', function() {
+             dodajuBazu(storyId);
+        });
+        divUokviri.appendChild(dodajDugme);
+        
+
+        
+        highlights.forEach(obj => {
+
+
+            const radioButton = document.createElement('input');
+            radioButton.type = 'radio';
+            radioButton.name = 'izaberi'; // Postavite jedinstveno ime grupe radio dugmadi ako je potrebno
+            radioButton.value = obj.id; 
+            divIzaberi.appendChild(radioButton);
+ 
+            const label = document.createElement('label');
+            label.classList.add("labelaIzaberi")
+            label.innerHTML = obj.name;
+            label.style.margin = '10px';
+            divIzaberi.appendChild(label);
+
+           
+            
+        });
+
+         
+
+    } catch (error) {
+        console.error('Error getting highlights:', error);
+        
+    }
+}
+
+async function dodajuBazu(storyId){
+    const radioDugmad = document.querySelectorAll('.divIzaberi input[type="radio"]');
+
+    let highlightId = null;
+
+    radioDugmad.forEach(radio => {
+        if (radio.checked) {
+            //ovo je zapravo id highlight
+            highlightId = radio.value;
+        }
+    });
+
+    
+    const result = await addStoryToHighlight(highlightId, storyId);
+
+    
+    
+}
+
+async function getHighlightsByUserId() {
+    var decode=new Decode();
+    var korisnik=await decode.vratiKorisnika();
+
+    const userId = korisnik.id;
+    try {
+        const response = await fetch(`http://localhost:5142/Highlight/getHighlightsFromUser/${userId}`);
+
+        if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+        }
+
+        const highlights = await response.json();
+       
+        return highlights;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+async function addStoryToHighlight(highlightId, storyId) {
+    try {
+        const response = await fetch(`http://localhost:5142/Highlight/${highlightId}/AddStory/${storyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+

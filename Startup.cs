@@ -23,9 +23,9 @@ namespace napredneBaze
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            neo4jUri = new Uri("bolt://54.211.48.153:7687");
+            neo4jUri = new Uri("bolt://54.172.3.144:7687");
             neo4jUser = "neo4j";
-            neo4jPassword = "hangar-stuffing-buckets";
+            neo4jPassword = "overvoltage-cast-insertions";
         }
 
         public void ConfigureServices(IServiceCollection services)

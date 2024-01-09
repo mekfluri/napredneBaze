@@ -77,6 +77,7 @@ export class User {
                 console.log(data);
                 this.id = data.id;
                 this.Phone = data.phone;
+                this.Name = data.name;
                 this.UserName = data.userName;
                 this.LastName = data.lastName;
                 this.ime.innerText = data.name + " " + data.lastName; // Ispravio sam document.getElementById("ime") na this.ime
@@ -254,6 +255,8 @@ export class User {
         if (email === "") {
             email = this.email;
         }
+
+        
        
 
         const editData = {
@@ -268,7 +271,7 @@ export class User {
           };
           console.log(editData);
 
-          fetch('http://localhost:5142/User/IzmeniKorisnika', {
+          await fetch('http://localhost:5142/User/IzmeniKorisnika', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -291,7 +294,7 @@ export class User {
             });
           
 
-           
+            location.reload();
         
 
     }

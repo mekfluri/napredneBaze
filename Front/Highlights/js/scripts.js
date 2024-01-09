@@ -104,6 +104,83 @@ const fetchHighlights = async () => {
             navList.appendChild(listItem);
         }
 
+
+
+
 };
 
 window.addEventListener('DOMContentLoaded', fetchHighlights);
+
+var dodajDugme = document.getElementById("dodajHigh");
+dodajDugme.addEventListener("click", () => {
+          
+    dodajHighLight();
+});
+
+
+
+function dodajHighLight()
+{
+    var divZaPrikaz = document.getElementById("dodajHighDiv");
+    divZaPrikaz.style.display = (divZaPrikaz.style.display === "none" || divZaPrikaz.style.display === "") ? "flex" : "none";
+    divZaPrikaz.style.flexDirection = 'column';   
+    create();
+    
+}
+
+async function create()
+{
+    var dodaj = document.getElementById("dodajH");
+     dodaj.addEventListener("click", () => {
+        var ime = document.getElementById("tekst1").value;
+        var opis = document.getElementById("tekst3").value;
+        console.log(ime);
+      
+    
+        const urlParams = new URLSearchParams(window.location.search);
+        var userId = urlParams.get('dataId');
+    
+        const highlight = {
+            id: userId,
+            name: ime,
+            description: opis,
+        };
+        console.log(highlight);
+    
+        createHighlight(userId, highlight);
+        
+       
+                    
+    
+    });
+
+  
+}
+
+
+
+async function createHighlight(userId, highlight) {
+    try {
+        const response = await fetch(`http://localhost:5142/Highlight/CreateHighlight?userId=${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(highlight),
+        });
+
+        if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+        }
+
+        const result = await response.json();
+        location.reload();
+        return result;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+
+    
+}

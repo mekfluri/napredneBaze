@@ -33,8 +33,7 @@ export class register{
           var emailValue = emailInput.value;
           var phoneValue = phoneInput.value;
 
-          console.log("Username:", usernameValue);
-          console.log("Password:", passwordValue);
+          
       
           
   
@@ -47,6 +46,8 @@ export class register{
               Email: emailValue 
 
             };
+
+            console.log(loginData);
             
             fetch('http://localhost:5142/User/Register', {
               method: 'POST',
@@ -62,11 +63,11 @@ export class register{
                 return response.json();
               })
               .then(data => {
-                window.location.href = location.origin + 'Front/login-form-18/login.html';
+                window.location.href = location.origin + '/Front/login-form-18/index.html';
               })
               .catch(error => {
                 
-                console.error('Ne postoji korisnik');
+                console.error(error);
               });
             
   
