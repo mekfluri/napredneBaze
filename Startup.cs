@@ -2,13 +2,13 @@
 using napredneBaze.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+
 using Microsoft.IdentityModel.Tokens;
 using Neo4j.Driver;
 using Neo4jClient;
 using StackExchange.Redis;
-using System;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace napredneBaze
 {
@@ -17,10 +17,6 @@ namespace napredneBaze
         private Uri neo4jUri;
         private string neo4jUser;
         private string neo4jPassword;
-        string redisConnectionString = "redis://default:QNPnm6F5HaMWyk7SSlj4tBhKb1FZJDLu@redis-17176.c304.europe-west1-2.gce.cloud.redislabs.com:17176";
-
-
-        private ConnectionMultiplexer redisConnection;
 
         public IConfiguration Configuration { get; }
 
@@ -34,14 +30,11 @@ namespace napredneBaze
 
         public void ConfigureServices(IServiceCollection services)
         {
-   
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
-            // Neo4j configuration
             services.AddTransient<IAsyncSession>(provider =>
             {
-                Console.WriteLine("Uso sam neo");
                 var driver = GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPassword));
                 var session = driver.AsyncSession();
 
@@ -60,50 +53,35 @@ namespace napredneBaze
 
             var client = new BoltGraphClient(neo4jUri, neo4jUser, neo4jPassword);
             client.ConnectAsync();
-            services.AddSingleton<IConnectionMultiplexer>(provider =>
-                {
-                    Console.WriteLine("Uso sam redis");
-                    var redisConnection = ConnectionMultiplexer.Connect($"{redisConnectionString},abortConnect=false");
+            services.AddSingleton<IGraphClient>(client);
 
-                    if (redisConnection != null && redisConnection.IsConnected)
-                    {
-                        Console.WriteLine("Successfully connected to Redis database.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to connect to Redis database.");
-                    }
-
-                    return redisConnection;
-                });
             services.AddIdentity<AppUser, Neo4jIdentityRole>(options =>
             {
-                // Identity service configuration
+                // Konfiguracija opcija Identity servisa
             })
             .AddNeo4jDataStores()
             .AddDefaultTokenProviders();
 
-            // JWT authentication
             services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-           .AddJwtBearer(options =>
-            {
-                options.SaveToken = true;
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidIssuer = Configuration["JWT:ValidIssuer"],
-                    ValidAudience = Configuration["JWT:ValidAudience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
-                };
-            });
+           {
+               options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+               options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+               options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+           })
+          .AddJwtBearer(options =>
+           {
+               options.SaveToken = true;
+               options.RequireHttpsMetadata = false;
+               options.TokenValidationParameters = new TokenValidationParameters
+               {
+                   ValidateIssuer = true,
+                   ValidateAudience = true,
+                   ValidateLifetime = true,
+                   ValidIssuer = Configuration["JWT:ValidIssuer"],
+                   ValidAudience = Configuration["JWT:ValidAudience"],
+                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
+               };
+           });
 
             services.AddCors(options =>
             {
@@ -112,6 +90,7 @@ namespace napredneBaze
                               .AllowAnyMethod()
                               .AllowCredentials());
             });
+
 
             services.AddSwaggerGen(options =>
             {

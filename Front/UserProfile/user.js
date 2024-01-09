@@ -55,10 +55,10 @@ export class User {
     prikazPodataka() {
         var decode = new Decode();
         var username = decode.decodeJwtFromLocalStorage();
-
         this.dodaj();
 
         console.log(username);
+
 
         fetch(`http://localhost:5142/User/getUserByUsername/${username}`, {
             method: 'GET',
@@ -74,6 +74,7 @@ export class User {
                 return response.json();
             })
             .then(data => {
+                localStorage.setItem('searchValue', data.userName);
                 console.log(data);
                 this.id = data.id;
                 this.Phone = data.phone;

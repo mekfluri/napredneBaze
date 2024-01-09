@@ -34,7 +34,6 @@ export class User1 {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                // Dodajte dodatne zaglavlje ako je potrebno
             },
         })
         .then(response => {
@@ -42,10 +41,10 @@ export class User1 {
                 throw new Error('Network response was not ok');
             }
     
-            // Provera da li je odgovor prazan
+           
             if (response.status === 204) {
                 this.ime.innerHTML = 'Ne postoji user'
-                throw new Error('No data found');  // Dodao sam proveru da li je odgovor prazan
+                throw new Error('No data found');  
             }
     
             return response.json();
@@ -240,7 +239,7 @@ export class User1 {
         var contentDiv = document.getElementById("dodaj");
         const storyIframe = document.createElement('iframe');
         console.log(this.id);
-        storyIframe.src = `../Highlights/highlight.html?dataId=${korisnikid}`;  //odje menjas
+        storyIframe.src = `../HighlightsKorisnici/highlightKorisnici.html?dataId=${korisnikid}`;  //odje menjas
         storyIframe.style.width = '100%';
         storyIframe.style.height = '900px'; // Set the height as needed
 
