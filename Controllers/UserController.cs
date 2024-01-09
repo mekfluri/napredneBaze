@@ -396,7 +396,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
     }
     */
     [Route("checkFriendship/{userId}/{friendId}")]
-    [HttpPut]
+    [HttpGet]
    public async Task<IActionResult> checkFriendship(string userId, string friendId)
     {
         

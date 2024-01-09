@@ -98,7 +98,14 @@ export class User {
                     this.email = data.email;
                     email.innerText = "Email:"+" "+data.email;
                     console.log('User data:', data);
+
+
                 }
+
+                var brojPrijatelja = document.getElementById("brojPrijatelja");
+                console.log(data.numbersOfFriends);
+                brojPrijatelja.innerText = "Broj prijatelja:" + " "+ data.numbersOfFriends;
+                console.log('User data:', data);
               
                 var username = document.getElementById("username");
                 
@@ -121,10 +128,18 @@ export class User {
         console.log("pritisnula sam");
         var searchInput = document.getElementById("searchInput");
         var searchValue =  searchInput.value;
-        localStorage.setItem('searchValue', searchValue);
-        console.log(searchValue);
 
-        window.location.href =  window.location.href = location.origin + '/Front/DrugiKorisnici/profile1.html';
+        if(searchValue == this.UserName)
+        {
+             alert("Ne mozete pretrazivati sebe.") 
+        }else
+        {
+            localStorage.setItem('searchValue', searchValue);
+            console.log(searchValue);
+    
+            window.location.href =  window.location.href = location.origin + '/Front/DrugiKorisnici/profile1.html';
+        }
+       
 
 
     }
@@ -201,6 +216,7 @@ export class User {
 
     handleButtonClick(zahtevId) {
         console.log(this.trenutniID);
+        console.log(zahtevId);
 
         fetch(`http://localhost:5142/User/acceptFriend/${zahtevId}/${this.trenutniID}`, {
             method: 'PUT',
@@ -219,6 +235,7 @@ export class User {
 
     refreshZahteviDiv() {
         this.fetchFriendRequests();
+        locstion.reload();
     }
 
 
