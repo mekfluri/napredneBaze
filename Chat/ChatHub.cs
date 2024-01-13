@@ -29,7 +29,9 @@ namespace napredneBaze.Chat
         }
         public async Task Subscribe(string channel)
         {
+            //dodajemo trenutnu signalir vezu i kanal 
             await Groups.AddToGroupAsync(Context.ConnectionId, channel);
+            //kada stigne poruka na tom kanalu izvrsice se funkcija koja je prosledjna kao parametar
             _subscriber.Subscribe(channel, (c, m) => Clients.Group(channel).SendAsync("message", m));
         }
 

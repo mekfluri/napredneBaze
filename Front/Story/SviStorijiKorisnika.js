@@ -59,11 +59,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 buttonHigh.textContent="Dodaj u HighLight";
 
                 //button.onclick
-                
+                var fleg = true;
                 buttonHigh.onclick = async () => {
                    
-                    ucitaj(cardBodyDiv, story.id);
-                    
+                    if(fleg == true)
+                    {
+                        ucitaj(cardBodyDiv, story.id);
+                        fleg = false;
+                    }
+             
 
                 };
 
@@ -193,6 +197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardDiv.appendChild(cardBodyDiv);
             cardDiv.appendChild(cardFooterDiv);
 
+
+            
+
             
             var nakomsmoprofilu = provera();
 
@@ -263,7 +270,10 @@ async function Like(storyId,  likesLink) {
 async function ucitaj(cardBodyDiv, storyId) {
    
     try {
-       
+
+        
+        
+
         const highlights = await getHighlightsByUserId();
         
         const divUokviri = document.createElement('div');
@@ -369,6 +379,12 @@ async function addStoryToHighlight(highlightId, storyId) {
             },
         });
 
+        if (response.status === 409) {
+            alert( 'Story je vec dodat.');
+            console.log('Story already exists in the highlight.');
+            return { success: false, message: 'Story je vec dodat.' };
+        }
+
         if (!response.ok) {
             const errorMessage = await response.text();
             throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
@@ -381,6 +397,7 @@ async function addStoryToHighlight(highlightId, storyId) {
         throw error;
     }
 }
+
 
 async function KorisnikNaCijemSmoProfilu() {
     return new Promise(async (resolve, reject) => {

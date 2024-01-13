@@ -21,6 +21,10 @@ export class User {
         this.searchInput = document.getElementById("searchInput");
         this.dodajStory = document.getElementById("dodajStory");
         this.editPhoto = document.getElementById("editPhoto");
+        this.editPhotoo = document.getElementById("editPhoto1");
+        this.azuriraj = document.getElementById("editPhoto2");
+
+
         this.ime = document.getElementById("ime"); // Dodao sam this.ime
         this.searchButton.addEventListener("click", () => {
             console.log("Kliknuto!");
@@ -42,9 +46,17 @@ export class User {
           
             this.editPhoto1();
         });
+        this.editPhotoo.addEventListener("click", () => {
+          
+            this.saveImageToNeo4j();
+        });
         this.dodajStory.addEventListener("click", () => {
           
             this.dodajNoviStory();
+        });
+        this.azuriraj.addEventListener("click", () => {
+          
+            this.prikazSlike();
         });
 
         
@@ -76,6 +88,8 @@ export class User {
             .then(data => {
                 localStorage.setItem('searchValue', data.userName);
                 console.log(data);
+                this.ProfilePicture = data.profilePicture;
+                this.displayImage(this.ProfilePicture);
                 this.id = data.id;
                 this.Phone = data.phone;
                 this.Name = data.name;
@@ -202,7 +216,7 @@ export class User {
             console.log(zahtev);
             var newDiv = document.createElement("div");
             newDiv.className = "zahtev-div";
-            newDiv.innerHTML = '<p>' + zahtev.userName + '</p><button class="prihvati-button" data-zahtev-id="' + zahtev.id + '">Prihvati</button>';
+            newDiv.innerHTML = '<p>' + zahtev.userName + '</p><button id="prihvati" class="prihvati-button" data-zahtev-id="' + zahtev.id + '">Prihvati</button>';
             zahteviDiv.appendChild(newDiv);
         });
 
@@ -217,25 +231,34 @@ export class User {
     handleButtonClick(zahtevId) {
         console.log(this.trenutniID);
         console.log(zahtevId);
-
+    
         fetch(`http://localhost:5142/User/acceptFriend/${zahtevId}/${this.trenutniID}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => response.json())
+        .then(response => {
+            
+            if (!response.ok) {
+                throw new Error(`Request failed with status: ${response.status}`);
+            }
+            
+            return response.json();
+        })
         .then(data => {
+            console.log(data);
             this.refreshZahteviDiv();
         })
         .catch(error => {
             console.error('Error while accepting friend request:', error);
         });
     }
+    
 
     refreshZahteviDiv() {
         this.fetchFriendRequests();
-        locstion.reload();
+        location.reload();
     }
 
 
@@ -243,7 +266,7 @@ export class User {
     async editandSave(){
         var ime = document.getElementById("polje1").value;
         var prezime = document.getElementById("polje2").value;
-        var username = document.getElementById("polje3").value;
+        var username = "";
         var horoskop = document.getElementById("polje4").value;
         var interesovanja = document.getElementById("polje5").value;
         var email = document.getElementById("polje6").value;
@@ -305,7 +328,7 @@ export class User {
             .then(data => {
               console.log('Uspješno ažurirano:', data);
               this.prikazPodataka();
-              // Osvježite korisnički interfejs ili izvršite druge akcije koje su vam potrebne nakon ažuriranja
+          
             })
             .catch(error => {
               console.error('Greška pri ažuriranju:', error);
@@ -316,12 +339,117 @@ export class User {
         
 
     }
-     editPhoto1()
-     {
-         var mojfile = document.getElementById("uploadInput");
-            mojfile.style.display = (mojfile.style.display === "none" || mojfile.style.display === "") ? "block" : "none";
+    arrayBufferToBase64(buffer) {
+        var binary = '';
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
 
-     }
+    displayImage(putanja) {
+     
+        var imgElement = document.getElementById('profileImage');
+       
+        imgElement.src = putanja;
+    }
+    
+    async editPhoto1() {
+        var input = document.getElementById('uploadInput');
+        input.style.display = "block";
+        //input.style.display = (input.style.display === "none" || input.style.display === "") ? "block" : "none";
+        var file = input.files[0];
+       
+        
+        if (file) {
+            console.log(file.name)
+            localStorage.setItem('ime', file.name);
+            var formData = new FormData();
+            formData.append('file', file);
+            console.log(file);
+            console.log(formData)
+            await fetch('http://localhost:5142/User/upload', {
+                method: 'POST',
+                body: formData,
+               
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+               localStorage.setItem('slika', data.message);
+               this.ProfilePicture = data.message;
+              
+               alert(data.message);
+               
+             
+             
+             
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+          
+                } else {
+            alert('Molimo odaberite sliku za upload.');
+        
+            //this.saveImageToNeo4j(putanja);
+        
+        }
+
+
+        
+    }
+    
+
+   
+    saveImageToNeo4j(imageBytes)
+    {
+        
+        var ime = localStorage.getItem('ime');
+        var slika = "../../" + ime;
+        console.log(slika);
+        console.log(this.id)
+        var encodedSlikaPath = encodeURIComponent(slika);
+        
+        this.displayImage(slika);
+
+        fetch(`http://localhost:5142/User/azurirajSliku/${this.id}/${encodedSlikaPath}`, {
+            method: 'PUT',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+           //this.displayImage(encodedSlikaPath);
+        })
+        .catch(error => {
+            console.error('Greška prilikom ažuriranja slike:', error);
+        });
+
+    }
+
+    prikazSlike(){
+        var input = document.getElementById('uploadInput');
+        
+        input.style.display = (input.style.display === "none" || input.style.display === "") ? "flex" : "none";
+        var dugme = document.getElementById('editPhoto');
+        
+        dugme.style.display = (dugme.style.display === "none" || dugme.style.display === "") ? "flex" : "none";
+        var dugme1 = document.getElementById('editPhoto1');
+        
+        dugme1.style.display = (dugme1.style.display === "none" || dugme1.style.display === "") ? "flex" : "none";
+
+    }
 
     async dodaj()
     {

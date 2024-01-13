@@ -23,9 +23,9 @@ namespace napredneBaze
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            neo4jUri = new Uri("bolt://54.172.3.144:7687");
+            neo4jUri = new Uri("bolt://localhost:7687");
             neo4jUser = "neo4j";
-            neo4jPassword = "overvoltage-cast-insertions";
+            neo4jPassword = "password";
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -82,14 +82,21 @@ namespace napredneBaze
                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
                };
            });
+  
+             services.AddSingleton<IConnectionMultiplexer>(sp =>
+                              ConnectionMultiplexer.Connect("localhost:6379"));
 
-            services.AddCors(options =>
-            {
-                options.AddPolicy("CORS", builder => builder.WithOrigins("http://127.0.0.1:5501")
-                              .AllowAnyHeader()
-                              .AllowAnyMethod()
-                              .AllowCredentials());
-            });
+            services.AddEndpointsApiExplorer();
+         services.AddCors(options =>
+        {
+            options.AddPolicy("CORS", builder => builder
+                .WithOrigins("http://127.0.0.1:5501", "http://localhost:5501")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
+                
+        });
+
 
 
             services.AddSwaggerGen(options =>

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace napredneBaze.Chat.ChatService
 {
-    public class ChatService
+public class ChatService
     {
 
         private readonly IConnectionMultiplexer _redis;
@@ -53,17 +53,7 @@ namespace napredneBaze.Chat.ChatService
                 return messages;
             }
         }
-        public async Task<string> CreateRoom(string user1, string user2)
-        {
-            var roomId = $"{user1}:{user2}";
 
-            await _database.StringSetAsync($"room:{roomId}:name", $"Room between {user1} and {user2}");
-
-            await _database.SetAddAsync($"user:{user1}:rooms", roomId);
-            await _database.SetAddAsync($"user:{user2}:rooms", roomId);
-
-            return roomId;
-        }
         public async Task<List<ChatRoom>> GetRooms(int userId = 0)
         {
             var roomIds = await _database.SetMembersAsync($"user:{userId}:rooms");
