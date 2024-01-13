@@ -66,6 +66,9 @@ export class User1 {
 
             this.ime.innerText = data.name + " " + data.lastName;
             this.id = data.id;
+            this.ProfilePicture = data.profilePicture;
+            this.displayImage(this.ProfilePicture);
+            console.log(data);
             var interesovanja = document.getElementById("interesovanja");
             console.log(data.interests)
             if (data.interests != undefined) {
@@ -108,7 +111,12 @@ export class User1 {
         this.provera();
     }
     
-
+    displayImage(putanja) {
+     
+        var imgElement = document.getElementById('prikaziSliku');
+       
+        imgElement.src = putanja;
+    }
     pretraga() {
         console.log("pritisnula sam");
         var searchInput = document.getElementById("searchInput");

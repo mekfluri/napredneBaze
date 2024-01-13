@@ -439,6 +439,10 @@ export class User {
     }
 
     prikazSlike(){
+
+        var labela = document.getElementById('label');
+        
+        labela.style.display = (labela.style.display === "none" || labela.style.display === "") ? "flex" : "none";
         var input = document.getElementById('uploadInput');
         
         input.style.display = (input.style.display === "none" || input.style.display === "") ? "flex" : "none";

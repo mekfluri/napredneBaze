@@ -76,7 +76,7 @@ h5{
     width: 100%;
 }
 
-#mojDiv, #zahtevi{
+#mojDiv, #zahtevi, #label{
     display: none;
    
 }
