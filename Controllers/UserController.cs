@@ -280,7 +280,61 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         }
     }
     
-    
+    [HttpPut]
+    [Route("azurirajSliku/{userId}/{slika}")]
+    public async Task<ActionResult> azurirajSliku(string userId, string slika)
+    {
+        try
+        {
+            var dekodiranaSlika = HttpUtility.UrlDecode(slika);
+            var applicationUser = await _userManager.FindByIdAsync(userId);
+
+            if (applicationUser == null)
+            {
+                return BadRequest("Ne postoji korisnik sa ovim id-jem!");
+            }
+            else
+            {
+                applicationUser.ProfilePicture = dekodiranaSlika;
+                await _userManager.UpdateAsync(applicationUser);
+                return Ok(new { Message = "Uspeh" });
+            }
+        }
+        catch (Exception ex)
+        {
+            // Logovanje greške ili dodatna obrada
+            return StatusCode(500, new { Message = "Došlo je do greške prilikom ažuriranja slike.", Error = ex.Message });
+        }
+    }
+    [HttpPost]
+    [Route("upload")]
+    public async Task<IActionResult> upload(IFormFile file)
+    {
+        
+        string putanjaDoFoldera = Path.Combine(Directory.GetCurrentDirectory());
+
+        
+        try
+        {
+            if (file != null && file.Length > 0)
+            {
+                var filePath = Path.Combine(putanjaDoFoldera, $"{file.FileName}");
+                
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                return Ok(new { Message = putanjaDoFoldera });
+            }
+
+            return BadRequest(new { Putanja = "Nije poslana slika za upload." + putanjaDoFoldera });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "Greška prilikom obrade slike.", Error = ex.Message });
+        }
+    }
 
 
     /*[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -396,7 +450,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
     }
     */
     [Route("checkFriendship/{userId}/{friendId}")]
-    [HttpPut]
+    [HttpGet]
    public async Task<IActionResult> checkFriendship(string userId, string friendId)
     {
         
@@ -499,7 +553,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
 
 
-            return Ok("Friend request accepted.");
+           return Ok(new { Message = "Friend request accepted." });
         }
         catch (Exception ex)
         {

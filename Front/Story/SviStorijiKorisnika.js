@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardBodyDiv.classList.add('card-body');
             cardBodyDiv.id= story.id;
             
+           
+
+                       
              const buttonDelete = document.createElement('button');
             buttonDelete.classList.add('button');
             buttonDelete.textContent = "Obrisi story";
@@ -56,11 +59,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 buttonHigh.textContent="Dodaj u HighLight";
 
                 //button.onclick
-                
+                var fleg = true;
                 buttonHigh.onclick = async () => {
                    
-                    ucitaj(cardBodyDiv, story.id);
-                    
+                    if(fleg == true)
+                    {
+                        ucitaj(cardBodyDiv, story.id);
+                        fleg = false;
+                    }
+             
 
                 };
 
@@ -114,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 };
 
-
+                   
 
             const mediaDiv = document.createElement('div');
             mediaDiv.classList.add('media', 'mb-3');
@@ -190,11 +197,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardDiv.appendChild(cardBodyDiv);
             cardDiv.appendChild(cardFooterDiv);
 
+
+            
+
+            
+            var nakomsmoprofilu = provera();
+
+            nakomsmoprofilu.then(
+                (result) => {
+                 var fleg = result;
+                 console.log(fleg);
+                 if(fleg == true)
+                 {
+                    cardFooterDiv.appendChild(buttonDelete);
+                    cardFooterDiv.appendChild(buttonHigh);
+                    cardFooterDiv.appendChild(buttonEdit);
+                 }
+                },
+                (error) => {
+                  console.error(error);
+                }
+            );
+             
+            
                 cardFooterDiv.appendChild(likesLink);
-                cardFooterDiv.appendChild(buttonDelete);
-                cardFooterDiv.appendChild(buttonHigh);
-                cardFooterDiv.appendChild(buttonEdit);
-            colDiv.appendChild(cardDiv);
+                
+                colDiv.appendChild(cardDiv);
                 storiesContainer.appendChild(colDiv);
             });
         });
@@ -242,7 +270,10 @@ async function Like(storyId,  likesLink) {
 async function ucitaj(cardBodyDiv, storyId) {
    
     try {
-       
+
+        
+        
+
         const highlights = await getHighlightsByUserId();
         
         const divUokviri = document.createElement('div');
@@ -348,6 +379,12 @@ async function addStoryToHighlight(highlightId, storyId) {
             },
         });
 
+        if (response.status === 409) {
+            alert( 'Story je vec dodat.');
+            console.log('Story already exists in the highlight.');
+            return { success: false, message: 'Story je vec dodat.' };
+        }
+
         if (!response.ok) {
             const errorMessage = await response.text();
             throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
@@ -360,4 +397,61 @@ async function addStoryToHighlight(highlightId, storyId) {
         throw error;
     }
 }
+
+
+async function KorisnikNaCijemSmoProfilu() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            var storedSearchValue = localStorage.getItem('searchValue');
+            console.log(storedSearchValue);
+
+            const response = await fetch(`http://localhost:5142/User/getUserByUsername/${storedSearchValue}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            if (response.status === 204) {
+                console.error('No data found');
+                reject(new Error('No data found'));
+            }
+
+            const data = await response.json();
+            console.log(data.id);
+            resolve(data.id);
+        } catch (error) {
+            console.error('Error while fetching user data:', error.message);
+            reject(error);
+        }
+    });
+}
+
+async function provera() {
+    try {
+        var decode = new Decode();
+        var korisnik = await decode.vratiKorisnika();
+
+        const userId = korisnik.id;
+
+        var idkorisnikaProfila = await KorisnikNaCijemSmoProfilu();
+        console.log(idkorisnikaProfila);
+        console.log(userId);
+
+        if (idkorisnikaProfila === userId) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in provera:', error.message);
+        return false;
+    }
+}
+
+
 

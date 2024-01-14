@@ -3,6 +3,7 @@ using napredneBaze.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 
+
 using Microsoft.IdentityModel.Tokens;
 using Neo4j.Driver;
 using Neo4jClient;
@@ -63,6 +64,7 @@ namespace napredneBaze
             Console.WriteLine("\nConnected to redis database");
             services.AddIdentity<AppUser, Neo4jIdentityRole>(options =>
             {
+                // Konfiguracija opcija Identity servisa
                 // Konfiguracija opcija Identity servisa
             })
             .AddNeo4jDataStores()

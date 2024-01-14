@@ -2,7 +2,8 @@ import { Decode } from "../decode.js";
 import { User } from "../UserProfile/user.js";
 
 export class User1 {
-    constructor(Name, LastName, Phone, UserName, Password, Email, ProfilePicture, Interests, NumberOfFriends, Status, Horoscope) {
+    constructor(id, Name, LastName, Phone, UserName, Password, Email, ProfilePicture, Interests, NumberOfFriends, Status, Horoscope) {
+        this.id = id;
         this.idPrijavljenogKorisnika = null;
         this.Name = Name;
         this.LastName = LastName;
@@ -21,51 +22,70 @@ export class User1 {
         this.addRequest = document.getElementById("addRequest");
         //this.addRequest.addEventListener("click", () => this.provera())
         this.searchButton.addEventListener("click", () => this.pretraga());
+         
+        
+    
+    
     }
 
-    prikazPodataka() {
 
-        this.dodaj();
-        this.provera();
-        var storedSearchValue = localStorage.getItem('searchValue');
-        console.log(storedSearchValue);
+
+
+
     
-        fetch(`http://localhost:5142/User/getUserByUsername/${storedSearchValue}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                // Dodajte dodatne zaglavlje ako je potrebno
-            },
-        })
-        .then(response => {
+
+    async prikazPodataka() {
+        try {
+
+            this.dodaj();
+           
+            
+             
+
+            var storedSearchValue = localStorage.getItem('searchValue');
+            console.log(storedSearchValue);
+
+            const response = await fetch(`http://localhost:5142/User/getUserByUsername/${storedSearchValue}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-    
-            // Provera da li je odgovor prazan
+
             if (response.status === 204) {
-                this.ime.innerHTML = 'Ne postoji user'
-                throw new Error('No data found');  // Dodao sam proveru da li je odgovor prazan
+                this.ime.innerHTML = 'Ne postoji user';
+                throw new Error('No data found');
             }
-    
-            return response.json();
-        })
-        .then(data => {
+
+            const data = await response.json();
             console.log(data);
-    
+
             this.ime.innerText = data.name + " " + data.lastName;
             this.id = data.id;
+            this.ProfilePicture = data.profilePicture;
+            this.displayImage(this.ProfilePicture);
+            console.log(data);
             var interesovanja = document.getElementById("interesovanja");
             console.log(data.interests)
             if (data.interests != undefined) {
-                interesovanja.innerText = data.interests;
+                interesovanja.innerText = "Interesovanja:" + " " + data.interests;
             }
-    
+
             var Horoscope = document.getElementById("horoskop");
             if (data.horoscope != undefined) {
-                Horoscope.innerText = data.horoscope;
+                Horoscope.innerText = "Horoskop:" + " " + data.horoscope;
                 console.log('User data:', data);
             }
+
+            var brojPrijatelja = document.getElementById("brojPrijatelja");
+                console.log(data.numbersOfFriends);
+                brojPrijatelja.innerText = "Broj prijatelja:" + " "+ data.numbersOfFriends;
+                console.log('User data:', data);
+            
 
             var email = document.getElementById("email");
                 if (data.email != undefined) {
@@ -81,13 +101,22 @@ export class User1 {
                         username.innerText = data.userName;
                     
                     }
-        })
-        .catch(error => {
-            console.error('Error while fetching user data:', error.message);  // Prikazi samo poruku greške
-        });
+
+            console.log('User data:', data);
+        } catch (error) {
+            console.error('Error while fetching user data:', error.message);
+        }
+
+
+        this.provera();
     }
     
-
+    displayImage(putanja) {
+     
+        var imgElement = document.getElementById('prikaziSliku');
+       
+        imgElement.src = putanja;
+    }
     pretraga() {
         console.log("pritisnula sam");
         var searchInput = document.getElementById("searchInput");
@@ -126,7 +155,7 @@ export class User1 {
         console.log(this.idPrijavljenogKorisnika.id);
 
          
-        fetch(`http://localhost:5142/User/addFriend/${this.idPrijavljenogKorisnika.id}/${idProfila}`, {
+        await fetch(`http://localhost:5142/User/addFriend/${this.idPrijavljenogKorisnika.id}/${idProfila}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -157,8 +186,10 @@ export class User1 {
     {
         await this.someAsyncFunction();
         try {
-            const response = await fetch(`http://localhost:5142/User/checkFriendship/${this.id}/${this.idPrijavljenogKorisnika.id}`, {
-                method: 'PUT',
+            console.log(this.idPrijavljenogKorisnika);
+            console.log(this.id);
+            const response = await fetch(`http://localhost:5142/User/checkFriendship/${this.idPrijavljenogKorisnika.id}/${this.id}`, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                    
@@ -189,7 +220,7 @@ export class User1 {
 
         if(statusPrijateljstva == 1){
             this.addRequest.innerHTML = "Ukloni prijatelja";
-            await this.addRequest.addEventListener("click", () => this.obrisiPrijatelja());
+            this.addRequest.addEventListener("click", () => this.obrisiPrijatelja());
         }
         else if(statusPrijateljstva == 2){
             this.addRequest.innerHTML = "Zahtev poslat";
@@ -197,7 +228,7 @@ export class User1 {
         }
         else if(statusPrijateljstva == 3){
             this.addRequest.innerHTML = "Posalji zahtev";
-            await this.addRequest.addEventListener("click", () => this.posaljiZahtev());
+            this.addRequest.addEventListener("click", () => this.posaljiZahtev());
         
         }
 
@@ -240,7 +271,7 @@ export class User1 {
         var contentDiv = document.getElementById("dodaj");
         const storyIframe = document.createElement('iframe');
         console.log(this.id);
-        storyIframe.src = `../Highlights/highlight.html?dataId=${korisnikid}`;  //odje menjas
+        storyIframe.src = `../HighlightsKorisnici/highlightKorisnici.html?dataId=${korisnikid}`;  //odje menjas
         storyIframe.style.width = '100%';
         storyIframe.style.height = '900px'; // Set the height as needed
 

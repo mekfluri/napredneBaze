@@ -72,7 +72,7 @@ namespace napredneBaze.Controllers
         }
 
 
-        [HttpPost]
+        /*[HttpPost]
         [Route("{highlightId}/AddStory/{storyId}")]
         public async Task<IActionResult> AddStoryToHighlight(string highlightId, string storyId)
         {
@@ -104,7 +104,64 @@ namespace napredneBaze.Controllers
 
                 return StatusCode(500, errorResponseObj);
             }
-        } 
+        } */
+
+        [HttpPost]
+        [Route("{highlightId}/AddStory/{storyId}")]
+        public async Task<IActionResult> AddStoryToHighlight(string highlightId, string storyId)
+        {
+            try
+            {
+                // Provera da li stori već postoji u highlight-u
+                var storyExistsCount = await _client.Cypher
+                     .Match("(s:Story { Id: $storyId })-[:PART_OF_HIGHLIGHT]->(h:Highlight { Id: $highlightId })")
+                    .WithParam("highlightId", highlightId)
+                    .WithParam("storyId", storyId)
+                    .Return(s => s.Count())
+                    .ResultsAsync;
+
+                var storyExists = storyExistsCount.FirstOrDefault(); // Dobijamo prvi rezultat iz brojača
+
+                if (storyExists > 0)
+                {
+                    var existingResponseObj = new
+                    {
+                        Message = $"Story with id {storyId} already exists in Highlight with id {highlightId}",
+                        Success = false
+                    };
+
+                    return Conflict(existingResponseObj); // Koristimo Conflict (HTTP status code 409) da bismo označili konflikt
+                }
+
+                // Dodavanje stori-a u highlight
+                await _client.Cypher.Match("(h:Highlight { Id: $highlightId })")
+                    .Match("(s:Story { Id: $storyId })")
+                    .Create("(s)-[:PART_OF_HIGHLIGHT]->(h)")
+                    .WithParam("highlightId", highlightId)
+                    .WithParam("storyId", storyId)
+                    .ExecuteWithoutResultsAsync();
+
+                var responseObj = new
+                {
+                    Message = $"Story with id {storyId} added to Highlight with id {highlightId}",
+                    Success = true
+                };
+
+                return Ok(responseObj);
+            }
+            catch (Exception ex)
+            {
+                var errorResponseObj = new
+                {
+                    Message = "Error adding story to Highlight",
+                    Success = false,
+                    ErrorDetails = ex.Message
+                };
+
+                return StatusCode(500, errorResponseObj);
+            }
+        }
+
 
 
         [HttpGet]

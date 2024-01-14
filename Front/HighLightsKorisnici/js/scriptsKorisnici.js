@@ -6,10 +6,11 @@ const fetchHighlights = async () => {
         
        
         const urlParams = new URLSearchParams(window.location.search);
-        var userId = urlParams.get('dataId');
+        var userUsername = urlParams.get('dataId');
+        console.log(userUsername);
+
+        var userId = await vratiKorisnika(userUsername);
         console.log(userId);
-
-
 
         const response = await fetch(`http://localhost:5142/Highlight/getHighlightsFromUser/${userId}`);
          highlightsData = await response.json();
@@ -24,21 +25,8 @@ const fetchHighlights = async () => {
 
 
 
-            const button = document.createElement('button');
-            button.classList.add('button');
-            button.textContent = "Obrisi highlight";
-            section.appendChild(button);
+           
 
-                  button.onclick = async () => {
-                        try {
-                            if (!section) throw new Error("Section is not defined.");
-                            await fetch(`http://localhost:5142/Highlight/${section.id}`, { method: 'DELETE' });
-                            alert(`Highlight with ID ${section.id} deleted successfully!`);
-                            location.reload();
-                        } catch (error) {
-                            console.error("Error:", error.message);
-                        }
-                  };
             
          
 
@@ -116,84 +104,42 @@ const fetchHighlights = async () => {
 
 window.addEventListener('DOMContentLoaded', fetchHighlights);
 
-var dodajDugme = document.getElementById("dodajHigh");
-dodajDugme.addEventListener("click", () => {
-          
-    dodajHighLight();
-});
 
+async function vratiKorisnika(username){
+   console.log(username);
 
-
-function dodajHighLight()
-{
-    var divZaPrikaz = document.getElementById("dodajHighDiv");
-    divZaPrikaz.style.display = (divZaPrikaz.style.display === "none" || divZaPrikaz.style.display === "") ? "flex" : "none";
-    divZaPrikaz.style.flexDirection = 'column';   
-    create();
-    
-}
-
-function prikaziDugme(){
-    const urlParams = new URLSearchParams(window.location.search);
-    var trenutniKorisnikId = urlParams.get('dataId');
-    console.log(trenutniKorisnikId);
-}
-
-async function create()
-{
-    var dodaj = document.getElementById("dodajH");
-     dodaj.addEventListener("click", () => {
-        var ime = document.getElementById("tekst1").value;
-        var opis = document.getElementById("tekst3").value;
-        console.log(ime);
-      
-    
-        const urlParams = new URLSearchParams(window.location.search);
-        var userId = urlParams.get('dataId');
-    
-        const highlight = {
-            id: userId,
-            name: ime,
-            description: opis,
-        };
-        console.log(highlight);
-    
-        createHighlight(userId, highlight);
-        
-       
-                    
-    
-    });
-
-  
-}
-
-
-
-async function createHighlight(userId, highlight) {
-    try {
-        const response = await fetch(`http://localhost:5142/Highlight/CreateHighlight?userId=${userId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(highlight),
-        });
-
+    return await fetch(`http://localhost:5142/User/getUserByUsername/${username}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            // Add any additional headers if needed
+        },
+    })
+    .then(response => {
         if (!response.ok) {
-            const errorMessage = await response.text();
-            throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+            throw new Error('Network response was not ok');
         }
-
-        const result = await response.json();
-        location.reload();
-        return result;
-    } catch (error) {
-        console.error('Error:', error);
-        throw error;
-    }
-
-    
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        
+        return data.id;
+    })
+    .catch(error => {
+        console.error('Error while fetching user data:', error);
+    });
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

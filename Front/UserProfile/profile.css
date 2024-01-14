@@ -76,17 +76,21 @@ h5{
     width: 100%;
 }
 
-#mojDiv, #zahtevi{
+#mojDiv, #zahtevi, #label{
     display: none;
    
 }
-#edit, #filtriranje, #editPhoto {
+#edit, #filtriranje, #editPhoto, #prihvati, #editPhoto1,  #editPhoto2 {
     border:1px solid #8E24AA !important;
     background-color:#8E24AA;
     color:#fff;
      height:40px;
+     margin:30px;
 }
 
+#editPhoto, #editPhoto1{
+    display: none;
+}
 
 #polje1{
     margin: 10px;

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace napredneBaze.Chat.ChatService
 {
-    public class ChatService
+public class ChatService
     {
 
         private readonly IConnectionMultiplexer _redis;
