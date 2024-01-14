@@ -23,7 +23,7 @@ namespace napredneBaze.Chat.ChatService
 
         public async Task<List<RoomMessage>> GetMessages(string room, int offset = 0, int size = 50)//(string roomId = "0", int offset = 0, int size = 50)
         {
-            
+
 
 
             //var roomKey = $"room:{pubId}:{subId}";
@@ -53,29 +53,43 @@ namespace napredneBaze.Chat.ChatService
                 return messages;
             }
         }
-        public async Task<string> CreateRoom(string user1, string user2)
+        public async Task<string> CreateRoom(string creatorUser, string roomName)
         {
-            var roomId = $"{user1}:{user2}";
+            var roomId = $"{creatorUser}";
 
-            await _database.StringSetAsync($"room:{roomId}:name", $"Room between {user1} and {user2}");
+            var roomExists = await _database.KeyExistsAsync($"room:{roomId}:name");
 
-            await _database.SetAddAsync($"user:{user1}:rooms", roomId);
-            await _database.SetAddAsync($"user:{user2}:rooms", roomId);
+            if (!roomExists)
+            {
+                await _database.StringSetAsync($"room:{roomId}:name", roomName);
+                await _database.SetAddAsync($"user:{creatorUser}:rooms", roomId);
+                await _database.SetAddAsync("allRooms", roomId);
 
-            return roomId;
+                return roomId;
+            }
+            else
+            {
+                return null;
+            }
         }
-        public async Task<List<ChatRoom>> GetRooms(int userId = 0)
+
+
+
+        public async Task<List<ChatRoom>> GetAllRooms()
         {
-            var roomIds = await _database.SetMembersAsync($"user:{userId}:rooms");
+            var roomIds = await _database.SetMembersAsync("allRooms");
             var rooms = new List<ChatRoom>();
+
             foreach (var roomIdRedisValue in roomIds)
             {
                 var roomId = roomIdRedisValue.ToString();
-                var name = await _database.StringGetAsync($"room:{roomId}:name");
-                if (name.IsNullOrEmpty)
+                var roomName = await _database.StringGetAsync($"room:{roomId}:name");
+
+                if (roomName.IsNullOrEmpty)
                 {
-                    // It's a room without a name, likey the one with private messages 
+                    // It's a room without a name, likely the one with private messages
                     var roomExists = await _database.KeyExistsAsync($"room:{roomId}");
+
                     if (!roomExists)
                     {
                         continue;
@@ -90,10 +104,11 @@ namespace napredneBaze.Chat.ChatService
                     rooms.Add(new ChatRoom()
                     {
                         Id = roomId,
+                        RoomName = string.Empty,
                         Names = new List<string>() {
-                            (await _database.HashGetAsync($"user:{userIds[0]}", "username")).ToString(),
-                            (await _database.HashGetAsync($"user:{userIds[1]}", "username")).ToString(),
-                        }
+                    (await _database.HashGetAsync($"user:{userIds[0]}", "username")).ToString(),
+                    (await _database.HashGetAsync($"user:{userIds[1]}", "username")).ToString(),
+                }
                     });
                 }
                 else
@@ -101,21 +116,33 @@ namespace napredneBaze.Chat.ChatService
                     rooms.Add(new ChatRoom()
                     {
                         Id = roomId,
+                        RoomName = roomName.ToString(), // Set the RoomName
                         Names = new List<string>() {
-                            name.ToString()
-                        }
+                    roomName.ToString()
+                }
                     });
                 }
             }
+
             return rooms;
         }
+
+
 
         public async Task SendMessage(string room, RoomMessage message)
         {
             var roomKey = room;
+
             await _database.SortedSetAddAsync(roomKey, JsonConvert.SerializeObject(message), (double)message.Date);
-            
-            //await PublishMessage("message", message);
+
+        }
+
+        public async Task DeleteRoom(string roomId)
+        {
+            await _database.KeyDeleteAsync($"room:{roomId}:name");
+
+            await _database.SetRemoveAsync("allRooms", roomId);
+
         }
 
 
@@ -124,5 +151,5 @@ namespace napredneBaze.Chat.ChatService
 public class CreateRoomRequest
 {
     public string User1 { get; set; }
-    public string User2 { get; set; }
+    public string RoomName { get; set; }
 }
