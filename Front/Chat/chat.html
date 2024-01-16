@@ -7,10 +7,14 @@
     <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="stylesheet.css">
     <script type="module" src="http://127.0.0.1:5501/Front/decode.js"></script>
+     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.11/signalr.min.js"></script>
 </head>
 <body>
 <script type="module">
     import { Decode } from "http://127.0.0.1:5501/Front/decode.js";
+
+
   // Create link element for font-awesome
   const fontAwesomeLink = document.createElement('link');
   fontAwesomeLink.href = 'https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css';
@@ -75,10 +79,20 @@ fetch('http://localhost:5142/Chat/getAllRooms')
             nameDiv.className = 'name';
             nameDiv.textContent = room.roomName;
 
-       
-
             userDiv.appendChild(nameDiv);
 
+             const   subscribeBtn = document.createElement('span');
+           subscribeBtn.className = 'answer-btn answer-btn-1';
+             subscribeBtn.innerHTML = 'subscribe';
+            subscribeBtn.onclick = async (ev) => {
+            const roomName = room.roomName;
+            await SubscribeToRoom(roomName);
+         
+            await fetchMessages(roomName);
+        };
+
+   
+  chatUsersDiv.appendChild( subscribeBtn);
             chatUsersDiv.appendChild(userDiv);
             
                     fetchMessages(room.id)
@@ -110,6 +124,14 @@ fetch('http://localhost:5142/Chat/getAllRooms')
 rightColInsideDiv.id = 'chatBodyContainer'; // Added an ID
 rightColInsideDiv.className = 'col-inside-lg decor-default';
 rightColumnDiv.appendChild(rightColInsideDiv);
+
+
+
+var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:6379/Chat/Chat/chat", {
+    skipNegotiation: true,
+    transport: signalR.HttpTransportType.WebSockets
+})
+
 
  async function fetchMessages(roomId) {
   return new Promise(async (resolve, reject) => {
@@ -227,6 +249,7 @@ messages.forEach(async (message) => {
         }
     }
 });
+
   
   answerAddDiv.appendChild(input);
   answerAddDiv.appendChild(answerBtn1);
@@ -272,8 +295,19 @@ async function sendMessage(userId, roomId, message) {
             console.error('Error sending message:', error);
         });
 }
-
-
+ async function SubscribeToRoom(roomName) {
+          
+            if (connection.state === signalR.HubConnectionState.Connected) {
+              
+                connection.invoke("Subscribe", roomName).then(() => {
+                    console.log(`Subscribed to room: ${roomName}`);
+                }).catch(err => {
+                    console.error(`Error subscribing to room: ${err}`);
+                });
+            } else {
+                console.error("SignalR connection is not established.");
+            }
+        }
 
 
 </script>

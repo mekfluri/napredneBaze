@@ -1,17 +1,17 @@
 ﻿using AspNetCore.Identity.Neo4j;
 using napredneBaze.Models;
+using napredneBaze.Chat;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-
-
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using Neo4j.Driver;
 using Neo4jClient;
 using StackExchange.Redis;
 using System.Text;
 
-using NRedisStack;
-using NRedisStack.RedisStackCommands;
 
 
 namespace napredneBaze
@@ -36,6 +36,18 @@ namespace napredneBaze
         {
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+             services.AddSignalR();
+
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                });
+            });
+
+
 
             services.AddTransient<IAsyncSession>(provider =>
             {
@@ -58,9 +70,9 @@ namespace napredneBaze
             var client = new BoltGraphClient(neo4jUri, neo4jUser, neo4jPassword);
             client.ConnectAsync();
             services.AddSingleton<IGraphClient>(client);
-            services.AddSingleton<IConnectionMultiplexer>(
-                ConnectionMultiplexer.Connect("redis-17176.c304.europe-west1-2.gce.cloud.redislabs.com:17176,password=QNPnm6F5HaMWyk7SSlj4tBhKb1FZJDLu")
-            );
+            string redisConnectionString = Configuration.GetConnectionString("Redis");
+            services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnectionString));
+
             Console.WriteLine("\nConnected to redis database");
             services.AddIdentity<AppUser, Neo4jIdentityRole>(options =>
             {
@@ -127,12 +139,15 @@ namespace napredneBaze
             app.UseRouting();
 
             app.UseCors("CORS");
+            app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapHub<Chat.Chat>("/chat");
             });
         }
     }
