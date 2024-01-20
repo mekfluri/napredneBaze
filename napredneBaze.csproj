@@ -8,17 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Neo4jClient" Version="5.1.14" />
     <PackageReference Include="AspNetCore.Identity.Neo4j" Version="2.0.0-preview1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.1" />
-    <PackageReference Include="NRedisStack" Version="0.11.0" />
     <PackageReference Include="SignalRSwaggerGen" Version="4.1.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="5.0.14" />
-
   </ItemGroup>
 
 </Project>

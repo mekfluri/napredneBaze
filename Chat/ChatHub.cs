@@ -4,26 +4,29 @@ using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using StackExchange.Redis;
 
-namespace napredneBaze.Chat
+namespace napredneBaze.Chat.ChatHub
 {
     [SignalRHub]
 
-    public class Chat : Hub
+    public class ChatHub : Hub
     {
-    
+
 
         private readonly RedisSubscriber _subscriber;
-        private readonly IConnectionMultiplexer redis;
-        private readonly IDatabase redisDatabase;
+        private readonly IConnectionMultiplexer _redis;
+        private readonly IDatabase _redisDatabase;
 
-        public Chat(IConnectionMultiplexer redis)
+        public ChatHub(IConnectionMultiplexer redis)
         {
 
-            _subscriber = new RedisSubscriber(redis);
+
+            _redis = redis;
+            _redisDatabase = _redis.GetDatabase();
+            _subscriber = new RedisSubscriber(_redis);
         }
 
 
-        public Chat()
+        public ChatHub()
         {
 
         }
@@ -43,6 +46,7 @@ namespace napredneBaze.Chat
 
         public async Task JoinRoom(string roomName)
         {
+            Console.WriteLine($"ConnectionId: {Context.ConnectionId}, RoomName: {roomName}");
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
         }
 
@@ -57,14 +61,32 @@ namespace napredneBaze.Chat
             await Clients.Group(roomName).SendAsync("message", message);
         }
 */
-
         public async Task SendMessage(string message, string roomName)
         {
-            await Clients.Group(roomName).SendAsync("message", message);
-            IDatabase db = redis.GetDatabase();
-            string key = $"{roomName}";
-            bool success = db.StringSet(key, message);
+            try
+            {
+                //Console.WriteLine(Clients.Group(roomName));
 
+                await Clients.Group(roomName).SendAsync("message", message);
+                //redisDatabase = redis.GetDatabase();
+                Console.WriteLine("cao");
+                string key = $"{roomName}";
+                bool success = _redisDatabase.StringSet(key, message);
+
+                if (success)
+                {
+                    Console.WriteLine($"Poruka uspešno sačuvana u Redis-u za sobu: {roomName}");
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Greška prilikom čuvanja poruke u Redis-u za sobu: {roomName}");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error in SendMessage: {ex.Message}");
+            }
         }
 
 

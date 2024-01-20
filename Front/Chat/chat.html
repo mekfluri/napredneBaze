@@ -46,6 +46,8 @@
   leftColumnDiv.className = 'col-sm-3 col-xs-12';
   rowDiv.appendChild(leftColumnDiv);
 
+ 
+
   // Create col-inside-lg div for left column
   const leftColInsideDiv = document.createElement('div');
   leftColInsideDiv.className = 'col-inside-lg decor-default chat';
@@ -53,6 +55,63 @@
   leftColInsideDiv.style.outline = 'none';
   leftColInsideDiv.tabIndex = '5000';
   leftColumnDiv.appendChild(leftColInsideDiv);
+
+  var el=document.createElement("div");
+  el.className="el";
+
+      const   dodajGrupu = document.createElement('span');
+           dodajGrupu.className = 'button-68';
+             dodajGrupu.innerHTML = 'Dodaj grupu';
+            dodajGrupu.onclick = async (ev) => {
+             var container = document.createElement("div");
+      container.className = "dynamic-input";
+
+      // Create input element
+      var input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = " ";
+      input.addEventListener("focus", function() {
+        input.classList.add("focused");
+      });
+      input.addEventListener("blur", function() {
+        input.classList.remove("focused");
+      });
+
+
+      var hint = document.createElement("label");
+      hint.className = "hint";
+      hint.textContent = "Ime sobe";
+
+      
+      container.appendChild(input);
+      container.appendChild(hint);
+
+          el.appendChild(container);
+          
+      const  posaljiGrupu = document.createElement('span');
+           posaljiGrupu.className = 'button-68';
+             posaljiGrupu.innerHTML = 'Sačuvaj';
+
+   el.appendChild(posaljiGrupu);
+
+    posaljiGrupu.onclick = async (ev) => {
+          var decode = new Decode();
+              var imeSobe = input.value.trim();
+         var korisnik = await decode.vratiKorisnika();
+        console.log(imeSobe);
+        console.log(korisnik.id);
+            saveRoom(korisnik.id, imeSobe);
+    
+        
+    }
+            
+            const roomName = room.roomName;
+          await SubscribeToRoom(roomName);
+        
+        };
+   leftColInsideDiv.appendChild(el);
+   el.appendChild(dodajGrupu);
+
 
   // Create chat-users div
   const chatUsersDiv = document.createElement('div');
@@ -67,6 +126,7 @@ fetch('http://localhost:5142/Chat/getAllRooms')
 
             const userDiv = document.createElement('div');
             userDiv.className = 'user';
+            userDiv.id=room.id;
 
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'avatar';
@@ -82,7 +142,7 @@ fetch('http://localhost:5142/Chat/getAllRooms')
             userDiv.appendChild(nameDiv);
 
              const   subscribeBtn = document.createElement('span');
-           subscribeBtn.className = 'answer-btn answer-btn-1';
+           subscribeBtn.className = 'button-68';
              subscribeBtn.innerHTML = 'subscribe';
             subscribeBtn.onclick = async (ev) => {
             const roomName = room.roomName;
@@ -284,6 +344,7 @@ async function sendMessage(userId, roomId, message) {
         .then(response => {
              const chatBodyDiv = document.getElementById("chatBodyContainer");
          chatBodyDiv.innerHTML="";
+           sendMessageinRoom(roomId, message);
 
            fetchMessages(roomId);
         })
@@ -295,22 +356,86 @@ async function sendMessage(userId, roomId, message) {
             console.error('Error sending message:', error);
         });
 }
- async function SubscribeToRoom(roomName) {
-          
-            if (connection.state === signalR.HubConnectionState.Connected) {
-              
-                connection.invoke("Subscribe", roomName).then(() => {
-                    console.log(`Subscribed to room: ${roomName}`);
-                }).catch(err => {
-                    console.error(`Error subscribing to room: ${err}`);
-                });
-            } else {
-                console.error("SignalR connection is not established.");
-            }
-        }
+async function saveRoom(userId, roomName) {
+    console.log(userId);
+    console.log(roomName);
+  
 
+ 
+  try {       const url = `http://localhost:5142/Chat/createRoom/${userId}/${roomName}`;
+                         
+                            await fetch(url, { method: 'POST' });
+                         } catch (error) {
+                            console.error("Error:", error.message);
+                        }
+
+        location.reload();
+                    }
+
+ async function SubscribeToRoom(roomName, div) {
+             
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("http://localhost:5142/hubs/ChatHub")  // Postavite odgovarajući URL za vaš Hub
+                .build();
+
+            console.log(connection);
+            try {
+            await connection.start();
+            connection.on("message", (message) => {
+                console.log(`Received message: ${message}`);
+                dodajPoruku(chatBodyDiv, message);
+            });
+            console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
+             
+            await connection.invoke("Subscribe", roomName);
+            console.log(`Subscribed to room: ${roomName}`);
+            } catch (error) {
+                console.error(`Error establishing SignalR connection or subscribing to room: ${error}`);
+            }
+            }
+
+            
+            async function joinRoom(roomName) {
+            try {
+                await connection.invoke("JoinRoom", roomName);
+                console.log(`Successfully joined room: ${roomName}`);
+                // Dodajte ovde logiku za prikaz korisniku da je pristupio sobi
+            } catch (err) {
+                console.error(`Error joining room: ${err}`);
+                // Dodajte ovde logiku za prikaz korisniku da pristupanje sobi nije uspelo
+            }
+          }
+
+          async function sendMessageinRoom(roomName, message)
+          {
+            console.log(roomName);
+            try {
+                await connection.invoke("SendMessage", message, roomName);
+                console.log(`Successfully send: ${roomName}`);
+                // Dodajte ovde logiku za prikaz korisniku da je pristupio sobi
+            } catch (err) {
+                console.error(`Error sending message: ${err}`);
+                // Dodajte ovde logiku za prikaz korisniku da pristupanje sobi nije uspelo
+            }
+   
+          }
+
+          async function subscribe(roomName)
+          {
+            console.log(roomName);
+            try {
+                await connection.invoke("Subscribe", roomName);
+                console.log(`Successfully subscribe: ${roomName}`);
+                // Dodajte ovde logiku za prikaz korisniku da je pristupio sobi
+            } catch (err) {
+                console.error(`Error sending message: ${err}`);
+                // Dodajte ovde logiku za prikaz korisniku da pristupanje sobi nije uspelo
+            }
+   
+          }
 
 </script>
+
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.6.8-fix/jquery.nicescroll.min.js"></script>

@@ -1,5 +1,7 @@
-﻿using AspNetCore.Identity.Neo4j;
+﻿
+using AspNetCore.Identity.Neo4j;
 using napredneBaze.Models;
+using napredneBaze.Chat.ChatHub;
 using napredneBaze.Chat;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +13,9 @@ using Neo4j.Driver;
 using Neo4jClient;
 using StackExchange.Redis;
 using System.Text;
+using SignalRSwaggerGen;
+
+
 
 
 
@@ -31,12 +36,11 @@ namespace napredneBaze
             neo4jUser = "neo4j";
             neo4jPassword = "numeral-transistor-procurement";
         }
-
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
-             services.AddSignalR();
+            services.AddSignalR();
 
 
             services.AddCors(options =>
@@ -112,14 +116,25 @@ namespace napredneBaze
             });
 
 
-            services.AddSwaggerGen(options =>
+            /*services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = "Your API Title",
                     Version = "v1"
                 });
+                 options.AddSignalRHub<Chat.Chat>("/chat");
+               
+            });*/
+            services.AddSwaggerGen(options =>
+            {
+                options.AddSignalRSwaggerGen();
             });
+
+            services.AddSignalR();
+            services.AddTransient<ChatHub>();
+
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -147,8 +162,12 @@ namespace napredneBaze
             {
                 endpoints.MapControllers();
 
-                endpoints.MapHub<Chat.Chat>("/chat");
+                endpoints.MapHub<ChatHub>("hubs/ChatHub");
             });
         }
     }
 }
+
+
+
+

@@ -38,11 +38,11 @@ namespace napredneBaze.Controllers
         {
             await _service.SendMessage(room, message);
         }
-        [Route("createRoom")]
+        [Route("createRoom/{userId}/{roomName}")]
         [HttpPost]
-        public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
+        public async Task<IActionResult> CreateRoom(string userId, string roomName)
         {
-            var roomId = await _service.CreateRoom(request.User1, request.RoomName); // Pass the roomName
+            var roomId = await _service.CreateRoom(userId, roomName); // Pass the roomName
             if (roomId != null)
             {
                 return Ok(new { RoomId = roomId });
