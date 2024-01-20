@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using StackExchange.Redis;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 
 namespace napredneBaze.Chat.ChatHub
 {
@@ -61,7 +64,7 @@ namespace napredneBaze.Chat.ChatHub
             await Clients.Group(roomName).SendAsync("message", message);
         }
 */
-        public async Task SendMessage(string message, string roomName)
+        public async Task SendMessage(RoomMessage message, string roomName)
         {
             try
             {
@@ -71,16 +74,10 @@ namespace napredneBaze.Chat.ChatHub
                 //redisDatabase = redis.GetDatabase();
                 Console.WriteLine("cao");
                 string key = $"{roomName}";
-                bool success = _redisDatabase.StringSet(key, message);
+                double score = 1.0; // Postavite željeni rezultat za sortiranje
+                 await  _redisDatabase.SortedSetAddAsync(roomName, JsonConvert.SerializeObject(message), (double)message.Date);
 
-                if (success)
-                {
-                    Console.WriteLine($"Poruka uspešno sačuvana u Redis-u za sobu: {roomName}");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"Greška prilikom čuvanja poruke u Redis-u za sobu: {roomName}");
-                }
+           
 
             }
             catch (Exception ex)

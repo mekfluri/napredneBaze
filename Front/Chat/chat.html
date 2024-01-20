@@ -106,7 +106,7 @@
     }
             
             const roomName = room.roomName;
-          await SubscribeToRoom(roomName);
+         
         
         };
    leftColInsideDiv.appendChild(el);
@@ -146,18 +146,21 @@ fetch('http://localhost:5142/Chat/getAllRooms')
              subscribeBtn.innerHTML = 'subscribe';
             subscribeBtn.onclick = async (ev) => {
             const roomName = room.roomName;
-            await SubscribeToRoom(roomName);
-         
+           // var trazeniDiv = await fetchMessages(roomName);
+            await SubscribeToRoom(roomName, chatUsersDiv);
             await fetchMessages(roomName);
+           
+         
+            
         };
 
    
   chatUsersDiv.appendChild( subscribeBtn);
             chatUsersDiv.appendChild(userDiv);
-            
+            console.log(room.id);
                     fetchMessages(room.id)
                         .then((messages) => {
-                            // Handle messages
+                            
                         })
                       .catch((error) => {
     console.error('Error in fetchMessages:', error);
@@ -198,6 +201,7 @@ var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:6
     try {
       const response = await fetch(`http://localhost:5142/Chat/getMessages/${roomId}`);
       const messages = await response.json();
+      console.log(messages);
 
   const chatBodyDiv = document.createElement('div');
   chatBodyDiv.className = 'chat-body';
@@ -240,7 +244,9 @@ messages.forEach(async (message) => {
       answerDiv.appendChild(timeDiv);
 
       chatBodyDiv.appendChild(answerDiv);
+      return chatBodyDiv;
     } else {
+      console.log(message.from)
       const userResponse = await fetch(`http://localhost:5142/User/getUserById/${message.from}`);
       const drugikorisnik = await userResponse.json();
       
@@ -275,6 +281,7 @@ messages.forEach(async (message) => {
    
 
       chatBodyDiv.appendChild(answerDiv);
+      return chatBodyDiv;
     }
   }
   catch (error) {
@@ -303,7 +310,19 @@ messages.forEach(async (message) => {
          var decode = new Decode();
          var korisnik = await decode.vratiKorisnika();
 
+            console.log(korisnik.id)
+            console.log(roomId)
+            console.log(message)
+            const roomMessage = {
+                from: korisnik.id,
+                date:1,
+                message: message,
+                roomId: roomId,
+            };
+            console.log(roomMessage);
+
             sendMessage(korisnik.id, roomId, message);
+            sendMessageinRoom(roomId,roomMessage);
          
             input.value = '';
         }
@@ -344,7 +363,7 @@ async function sendMessage(userId, roomId, message) {
         .then(response => {
              const chatBodyDiv = document.getElementById("chatBodyContainer");
          chatBodyDiv.innerHTML="";
-           sendMessageinRoom(roomId, message);
+         
 
            fetchMessages(roomId);
         })
@@ -372,8 +391,12 @@ async function saveRoom(userId, roomName) {
         location.reload();
                     }
 
+
+
  async function SubscribeToRoom(roomName, div) {
              
+            var decode = new Decode();
+            var korisnik = await decode.vratiKorisnika();
             connection = new signalR.HubConnectionBuilder()
                 .withUrl("http://localhost:5142/hubs/ChatHub")  // Postavite odgovarajući URL za vaš Hub
                 .build();
@@ -382,11 +405,53 @@ async function saveRoom(userId, roomName) {
             try {
             await connection.start();
             connection.on("message", (message) => {
-                console.log(`Received message: ${message}`);
-                dodajPoruku(chatBodyDiv, message);
+                console.log(message);
+                console.log(`Received message: ${message.message}`);
+                if (message.from == korisnik.id)
+                /*var poruka = document.createElement("div");
+                poruka.innerHTML = message.message;
+                div.appendChild(poruka);*/
+                {
+                    var answerClass = "left";
+                    var answerDiv = document.createElement("div");
+                    answerDiv.classList.add("answer", answerClass);
+
+                    var avatarDiv = document.createElement("div");
+                    avatarDiv.classList.add("avatar");
+                    var avatarImg = document.createElement("img");
+
+                    avatarDiv.appendChild(avatarImg);
+
+                    var statusDiv = document.createElement("div");
+
+                    answerDiv.appendChild(avatarDiv);
+
+                    var nameDiv = document.createElement("div");
+                    nameDiv.classList.add("name");
+                    nameDiv.textContent = message.from;
+                    answerDiv.appendChild(nameDiv);
+
+                    var textDiv = document.createElement("div");
+                    textDiv.classList.add("text");
+                    textDiv.textContent = message.message;
+                    answerDiv.appendChild(textDiv);
+
+                    var timeDiv = document.createElement("div");
+                    timeDiv.classList.add("time");
+                    timeDiv.textContent = message.date;
+                    answerDiv.appendChild(timeDiv);
+                
+
+                    div.appendChild(answerDiv);
+                  }         
+        
+
+              
+
+              
             });
             console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
-             
+            await joinRoom(roomName);
             await connection.invoke("Subscribe", roomName);
             console.log(`Subscribed to room: ${roomName}`);
             } catch (error) {
@@ -434,6 +499,7 @@ async function saveRoom(userId, roomName) {
    
           }
 
+          
 </script>
 
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>

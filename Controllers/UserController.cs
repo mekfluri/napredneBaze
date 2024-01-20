@@ -646,7 +646,16 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
                                               .Where((User d) => d.Id == id)
                                               .Return(d => d.As<User>()).ResultsAsync;
 
-        return Ok(users.LastOrDefault());
+         var user = users.LastOrDefault();
+    
+        if (user != null)
+        {
+            return new JsonResult(user);
+        }
+        else
+        {
+            return NotFound(); // Vraćanje 404 Not Found ako korisnik nije pronađen
+        }
     }
 
     [Route("getUserByUsername/{userName}")]
