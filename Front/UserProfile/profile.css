@@ -146,7 +146,13 @@ h5{
     color:#8E24AA;
     font-size:19px;
 }
-
+.btn {
+  line-height: 50px;
+  height: 50px;
+  text-align: center;
+  width: 250px;
+  cursor: pointer;
+}
 
 .buttons button:nth-child(1){
        border:1px solid #8E24AA !important;

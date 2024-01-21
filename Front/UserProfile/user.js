@@ -20,6 +20,7 @@ export class User {
         this.edit = document.getElementById("edit");
         this.searchInput = document.getElementById("searchInput");
         this.dodajStory = document.getElementById("dodajStory");
+        this.chatRooms = document.getElementById("Chats");
         this.editPhoto = document.getElementById("editPhoto");
         this.editPhotoo = document.getElementById("editPhoto1");
         this.azuriraj = document.getElementById("editPhoto2");
@@ -46,6 +47,11 @@ export class User {
           
             this.editPhoto1();
         });
+       this.chatRooms.addEventListener("click", () => {
+    
+        window.location.href = "http://127.0.0.1:5501/Front/Chat/chat.html";
+        });
+
         this.editPhotoo.addEventListener("click", () => {
           
             this.saveImageToNeo4j();

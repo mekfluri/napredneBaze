@@ -106,7 +106,7 @@
     }
             
             const roomName = room.roomName;
-         
+          await SubscribeToRoom(roomName);
         
         };
    leftColInsideDiv.appendChild(el);
@@ -138,6 +138,10 @@ fetch('http://localhost:5142/Chat/getAllRooms')
             const nameDiv = document.createElement('div');
             nameDiv.className = 'name';
             nameDiv.textContent = room.roomName;
+            nameDiv.addEventListener('click', function() {
+      
+            handleNameDivClick(room.id);
+            });
 
             userDiv.appendChild(nameDiv);
 
@@ -146,27 +150,15 @@ fetch('http://localhost:5142/Chat/getAllRooms')
              subscribeBtn.innerHTML = 'subscribe';
             subscribeBtn.onclick = async (ev) => {
             const roomName = room.roomName;
-           // var trazeniDiv = await fetchMessages(roomName);
-            await SubscribeToRoom(roomName, chatUsersDiv);
-            await fetchMessages(roomName);
-           
-         
-            
+            await SubscribeToRoom(roomName);
+    
         };
 
    
-  chatUsersDiv.appendChild( subscribeBtn);
+         chatUsersDiv.appendChild( subscribeBtn);
             chatUsersDiv.appendChild(userDiv);
-            console.log(room.id);
-                    fetchMessages(room.id)
-                        .then((messages) => {
-                            
-                        })
-                      .catch((error) => {
-    console.error('Error in fetchMessages:', error);
-    console.error('Error stack:', error.stack);
-});
-
+            
+                   
         });
     })
     .catch(error => console.error('Error fetching rooms:', error));
@@ -190,195 +182,8 @@ rightColumnDiv.appendChild(rightColInsideDiv);
 
 
 
-var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:6379/Chat/Chat/chat", {
-    skipNegotiation: true,
-    transport: signalR.HttpTransportType.WebSockets
-})
-
-
- async function fetchMessages(roomId) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const response = await fetch(`http://localhost:5142/Chat/getMessages/${roomId}`);
-      const messages = await response.json();
-      console.log(messages);
-
-  const chatBodyDiv = document.createElement('div');
-  chatBodyDiv.className = 'chat-body';
-  rightColInsideDiv.appendChild(chatBodyDiv);
-
-messages.forEach(async (message) => {
-
-     var decode = new Decode();
-        var korisnik = await decode.vratiKorisnika();
-
-   try{
-    if (korisnik.id == message.from) {
-      var answerClass = "right";
-      var answerDiv = document.createElement("div");
-      answerDiv.classList.add("answer", answerClass);
-
-      var avatarDiv = document.createElement("div");
-      avatarDiv.classList.add("avatar");
-      var avatarImg = document.createElement("img");
-
-      avatarDiv.appendChild(avatarImg);
-
-      var statusDiv = document.createElement("div");
-
-      answerDiv.appendChild(avatarDiv);
-
-      var nameDiv = document.createElement("div");
-      nameDiv.classList.add("name");
-      nameDiv.textContent = korisnik.name;
-      answerDiv.appendChild(nameDiv);
-
-      var textDiv = document.createElement("div");
-      textDiv.classList.add("text");
-      textDiv.textContent = message.message;
-      answerDiv.appendChild(textDiv);
-
-      var timeDiv = document.createElement("div");
-      timeDiv.classList.add("time");
-      timeDiv.textContent = message.date;
-      answerDiv.appendChild(timeDiv);
-
-      chatBodyDiv.appendChild(answerDiv);
-      return chatBodyDiv;
-    } else {
-      console.log(message.from)
-      const userResponse = await fetch(`http://localhost:5142/User/getUserById/${message.from}`);
-      const drugikorisnik = await userResponse.json();
-      
-      var answerClass = "left";
-      var answerDiv = document.createElement("div");
-      answerDiv.classList.add("answer", answerClass);
-
-      var avatarDiv = document.createElement("div");
-      avatarDiv.classList.add("avatar");
-      var avatarImg = document.createElement("img");
-
-      avatarDiv.appendChild(avatarImg);
-
-      var statusDiv = document.createElement("div");
-
-      answerDiv.appendChild(avatarDiv);
-
-      var nameDiv = document.createElement("div");
-      nameDiv.classList.add("name");
-      nameDiv.textContent = drugikorisnik.name;
-      answerDiv.appendChild(nameDiv);
-
-      var textDiv = document.createElement("div");
-      textDiv.classList.add("text");
-      textDiv.textContent = message.message;
-      answerDiv.appendChild(textDiv);
-
-      var timeDiv = document.createElement("div");
-      timeDiv.classList.add("time");
-      timeDiv.textContent = message.date;
-      answerDiv.appendChild(timeDiv);
-   
-
-      chatBodyDiv.appendChild(answerDiv);
-      return chatBodyDiv;
-    }
-  }
-  catch (error) {
-      reject(error);
-    }
-  });
-
-  // Create answer-add div
-  const answerAddDiv = document.createElement('div');
-  answerAddDiv.className = 'answer-add';
-  
-  const input = document.createElement('input');
-  input.placeholder = 'Write a message';
-  
-  const answerBtn1 = document.createElement('span');
-  answerBtn1.className = 'answer-btn answer-btn-1';
-  
-  const answerBtn2 = document.createElement('span');
-  answerBtn2.className = 'answer-btn answer-btn-2';
-
-    input.addEventListener('keydown', async (event) => {
-    if (event.key === 'Enter') {
-        const message = input.value.trim();
-        if (message) {
-            
-         var decode = new Decode();
-         var korisnik = await decode.vratiKorisnika();
-
-            console.log(korisnik.id)
-            console.log(roomId)
-            console.log(message)
-            const roomMessage = {
-                from: korisnik.id,
-                date:1,
-                message: message,
-                roomId: roomId,
-            };
-            console.log(roomMessage);
-
-            sendMessage(korisnik.id, roomId, message);
-            sendMessageinRoom(roomId,roomMessage);
-         
-            input.value = '';
-        }
-    }
-});
-
-  
-  answerAddDiv.appendChild(input);
-  answerAddDiv.appendChild(answerBtn1);
-  answerAddDiv.appendChild(answerBtn2);
-
-   
-  
-  chatBodyDiv.appendChild(answerAddDiv);
-   } catch (error) {
-      reject(error);
-    }
-  });
- 
-}
-async function sendMessage(userId, roomId, message) {
-    const url = `http://localhost:5142/Chat/sendMessage/${roomId}`;
-
-    const requestBody = {
-        from: userId,
-        date:1,
-        message: message,
-        roomId: roomId,
-    };
-
-   await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-    })
-        .then(response => {
-             const chatBodyDiv = document.getElementById("chatBodyContainer");
-         chatBodyDiv.innerHTML="";
-         
-
-           fetchMessages(roomId);
-        })
-        .then(data => {
-            console.log('Message sent successfully:', data);
-
-        })
-        .catch(error => {
-            console.error('Error sending message:', error);
-        });
-}
 async function saveRoom(userId, roomName) {
-    console.log(userId);
-    console.log(roomName);
-  
+
 
  
   try {       const url = `http://localhost:5142/Chat/createRoom/${userId}/${roomName}`;
@@ -391,12 +196,8 @@ async function saveRoom(userId, roomName) {
         location.reload();
                     }
 
-
-
  async function SubscribeToRoom(roomName, div) {
              
-            var decode = new Decode();
-            var korisnik = await decode.vratiKorisnika();
             connection = new signalR.HubConnectionBuilder()
                 .withUrl("http://localhost:5142/hubs/ChatHub")  // Postavite odgovarajući URL za vaš Hub
                 .build();
@@ -405,53 +206,11 @@ async function saveRoom(userId, roomName) {
             try {
             await connection.start();
             connection.on("message", (message) => {
-                console.log(message);
-                console.log(`Received message: ${message.message}`);
-                if (message.from == korisnik.id)
-                /*var poruka = document.createElement("div");
-                poruka.innerHTML = message.message;
-                div.appendChild(poruka);*/
-                {
-                    var answerClass = "left";
-                    var answerDiv = document.createElement("div");
-                    answerDiv.classList.add("answer", answerClass);
-
-                    var avatarDiv = document.createElement("div");
-                    avatarDiv.classList.add("avatar");
-                    var avatarImg = document.createElement("img");
-
-                    avatarDiv.appendChild(avatarImg);
-
-                    var statusDiv = document.createElement("div");
-
-                    answerDiv.appendChild(avatarDiv);
-
-                    var nameDiv = document.createElement("div");
-                    nameDiv.classList.add("name");
-                    nameDiv.textContent = message.from;
-                    answerDiv.appendChild(nameDiv);
-
-                    var textDiv = document.createElement("div");
-                    textDiv.classList.add("text");
-                    textDiv.textContent = message.message;
-                    answerDiv.appendChild(textDiv);
-
-                    var timeDiv = document.createElement("div");
-                    timeDiv.classList.add("time");
-                    timeDiv.textContent = message.date;
-                    answerDiv.appendChild(timeDiv);
-                
-
-                    div.appendChild(answerDiv);
-                  }         
-        
-
-              
-
-              
+                console.log(`Received message: ${message}`);
+                dodajPoruku(chatBodyDiv, message);
             });
             console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
-            await joinRoom(roomName);
+             
             await connection.invoke("Subscribe", roomName);
             console.log(`Subscribed to room: ${roomName}`);
             } catch (error) {
@@ -471,35 +230,36 @@ async function saveRoom(userId, roomName) {
             }
           }
 
-          async function sendMessageinRoom(roomName, message)
-          {
-            console.log(roomName);
-            try {
-                await connection.invoke("SendMessage", message, roomName);
-                console.log(`Successfully send: ${roomName}`);
-                // Dodajte ovde logiku za prikaz korisniku da je pristupio sobi
-            } catch (err) {
-                console.error(`Error sending message: ${err}`);
-                // Dodajte ovde logiku za prikaz korisniku da pristupanje sobi nije uspelo
-            }
-   
-          }
-
+         
           async function subscribe(roomName)
           {
             console.log(roomName);
             try {
                 await connection.invoke("Subscribe", roomName);
                 console.log(`Successfully subscribe: ${roomName}`);
-                // Dodajte ovde logiku za prikaz korisniku da je pristupio sobi
             } catch (err) {
                 console.error(`Error sending message: ${err}`);
-                // Dodajte ovde logiku za prikaz korisniku da pristupanje sobi nije uspelo
             }
    
           }
+  function handleNameDivClick(roomId) {
+    console.log("NameDiv clicked with roomId:", roomId);
+    const storyIframe = document.createElement('iframe');
+    storyIframe.src = `http://127.0.0.1:5501/Front/Chat/room.html?dataId=${roomId}`;
+    storyIframe.style.width = '700px';
+    storyIframe.style.height = '700px';
 
-          
+    var content = document.getElementById('chatBodyContainer');
+    content.innerHTML="";
+    
+    if (content) {
+        content.appendChild(storyIframe);
+    } else {
+        console.error("Element with ID 'chatBodyContainer' not found.");
+    }
+}
+
+
 </script>
 
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>

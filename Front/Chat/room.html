@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>facebook messenger chat - Bootdey.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="stylesheet.css">
+    <script type="module" src="http://127.0.0.1:5501/Front/decode.js"></script>
+     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.11/signalr.min.js"></script>
+</head>
+<body>
+<script type="module">
+    import { Decode } from "http://127.0.0.1:5501/Front/decode.js";
+
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        var roomId = urlParams.get('dataId');
+        console.log(roomId);
+    
+
+  // Create link element for font-awesome
+  const fontAwesomeLink = document.createElement('link');
+  fontAwesomeLink.href = 'https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css';
+  fontAwesomeLink.rel = 'stylesheet';
+  document.head.appendChild(fontAwesomeLink);
+
+  // Create script element for jQuery Nicescroll
+  const nicescrollScript = document.createElement('script');
+  nicescrollScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.6.8-fix/jquery.nicescroll.min.js';
+  document.head.appendChild(nicescrollScript);
+
+  // Create container div
+  const containerDiv = document.createElement('div');
+  containerDiv.className = 'container';
+  document.body.appendChild(containerDiv);
+
+  // Create content div
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'content container-fluid bootstrap snippets bootdey';
+  containerDiv.appendChild(contentDiv);
+
+  // Create row div
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'row row-broken';
+  contentDiv.appendChild(rowDiv);
+
+  // Create left column
+  const leftColumnDiv = document.createElement('div');
+  leftColumnDiv.className = 'col-sm-3 col-xs-12';
+  rowDiv.appendChild(leftColumnDiv);
+
+
+
+var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:6379/Chat/Chat/chat", {
+    skipNegotiation: true,
+    transport: signalR.HttpTransportType.WebSockets
+})
+
+const chatBodyDiv = document.createElement('div');
+chatBodyDiv.className = 'chat-body';
+chatBodyDiv.id = 'chatBodyContainer'; // Added an ID
+containerDiv.append(chatBodyDiv);
+
+ fetchMessages(roomId);
+
+ async function fetchMessages(roomId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch(`http://localhost:5142/Chat/getMessages/${roomId}`);
+      const messages = await response.json();
+
+
+messages.forEach(async (message) => {
+
+     var decode = new Decode();
+        var korisnik = await decode.vratiKorisnika();
+
+   try{
+    if (korisnik.id == message.from) {
+      var answerClass = "right";
+      var answerDiv = document.createElement("div");
+      answerDiv.classList.add("answer", answerClass);
+
+      var avatarDiv = document.createElement("div");
+      avatarDiv.classList.add("avatar");
+      var avatarImg = document.createElement("img");
+
+      avatarDiv.appendChild(avatarImg);
+
+      var statusDiv = document.createElement("div");
+
+      answerDiv.appendChild(avatarDiv);
+
+      var nameDiv = document.createElement("div");
+      nameDiv.classList.add("name");
+      nameDiv.textContent = korisnik.name;
+      answerDiv.appendChild(nameDiv);
+
+      var textDiv = document.createElement("div");
+      textDiv.classList.add("text");
+      textDiv.textContent = message.message;
+      answerDiv.appendChild(textDiv);
+
+      var timeDiv = document.createElement("div");
+      timeDiv.classList.add("time");
+      //timeDiv.textContent = message.date;
+      answerDiv.appendChild(timeDiv);
+
+      chatBodyDiv.appendChild(answerDiv);
+    } else {
+      const userResponse = await fetch(`http://localhost:5142/User/getUserById/${message.from}`);
+      const drugikorisnik = await userResponse.json();
+      
+      var answerClass = "left";
+      var answerDiv = document.createElement("div");
+      answerDiv.classList.add("answer", answerClass);
+
+      var avatarDiv = document.createElement("div");
+      avatarDiv.classList.add("avatar");
+      var avatarImg = document.createElement("img");
+
+      avatarDiv.appendChild(avatarImg);
+
+      var statusDiv = document.createElement("div");
+
+      answerDiv.appendChild(avatarDiv);
+
+      var nameDiv = document.createElement("div");
+      nameDiv.classList.add("name");
+      nameDiv.textContent = drugikorisnik.name;
+      answerDiv.appendChild(nameDiv);
+
+      var textDiv = document.createElement("div");
+      textDiv.classList.add("text");
+      textDiv.textContent = message.message;
+      answerDiv.appendChild(textDiv);
+
+      var timeDiv = document.createElement("div");
+      timeDiv.classList.add("time");
+      timeDiv.textContent = message.date;
+      answerDiv.appendChild(timeDiv);
+   
+
+      chatBodyDiv.appendChild(answerDiv);
+    }
+  }
+  catch (error) {
+      reject(error);
+    }
+  });
+
+  // Create answer-add div
+  const answerAddDiv = document.createElement('div');
+  answerAddDiv.className = 'answer-add';
+  
+  const input = document.createElement('input');
+  input.placeholder = 'Write a message';
+  
+  const answerBtn1 = document.createElement('span');
+  answerBtn1.className = 'answer-btn answer-btn-1';
+  
+  const answerBtn2 = document.createElement('span');
+  answerBtn2.className = 'answer-btn answer-btn-2';
+
+    input.addEventListener('keydown', async (event) => {
+    if (event.key === 'Enter') {
+        const message = input.value.trim();
+        if (message) {
+            
+         var decode = new Decode();
+         var korisnik = await decode.vratiKorisnika();
+
+            sendMessage(korisnik.id, roomId, message);
+         
+            input.value = '';
+        }
+    }
+});
+
+  
+  answerAddDiv.appendChild(input);
+  answerAddDiv.appendChild(answerBtn1);
+  answerAddDiv.appendChild(answerBtn2);
+
+   
+  
+  chatBodyDiv.appendChild(answerAddDiv);
+   } catch (error) {
+      reject(error);
+    }
+  });
+ 
+}
+async function sendMessage(userId, roomId, message) {
+    const url = `http://localhost:5142/Chat/sendMessage/${roomId}`;
+
+    const requestBody = {
+        from: userId,
+        date:1,
+        message: message,
+        roomId: roomId,
+    };
+
+   await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+    })
+        .then(response => {
+             const chatBodyDiv = document.getElementById("chatBodyContainer");
+         chatBodyDiv.innerHTML="";
+           sendMessageinRoom(roomId, message);
+
+           fetchMessages(roomId);
+        })
+        .then(data => {
+            console.log('Message sent successfully:', data);
+
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+        });
+}
+ async function sendMessageinRoom(roomName, message)
+          {
+            console.log(roomName);
+            try {
+                await connection.invoke("SendMessage", message, roomName);
+                console.log(`Successfully send: ${roomName}`);
+            } catch (err) {
+                console.error(`Error sending message: ${err}`);
+            }
+   
+          }
+
+
+
+</script>
+
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.6.8-fix/jquery.nicescroll.min.js"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            $(".chat").niceScroll();
+        });
+    </script>
+
+
+</body>
+</html>
