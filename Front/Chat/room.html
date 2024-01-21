@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.11/signalr.min.js"></script>
 </head>
 <body>
+  <script src="chat.html"></script>
 <script type="module">
     import { Decode } from "http://127.0.0.1:5501/Front/decode.js";
 
@@ -154,9 +155,26 @@ messages.forEach(async (message) => {
   // Create answer-add div
   const answerAddDiv = document.createElement('div');
   answerAddDiv.className = 'answer-add';
+
+  var dugmeSub = document.createElement('button');
+  dugmeSub.innerHTML = "Posalji poruku";
+  dugmeSub.className = "button-60";
+    
   
   const input = document.createElement('input');
   input.placeholder = 'Write a message';
+  input.style.display = 'none';
+
+  dugmeSub.addEventListener("click", () => {
+          var roomId = localStorage.getItem("roomId");
+          SubscribeToRoom(roomId,  chatBodyDiv);
+          input.style.display = 'flex';
+          dugmeSub.style.display = 'none'; 
+         
+      });
+
+  
+
   
   const answerBtn1 = document.createElement('span');
   answerBtn1.className = 'answer-btn answer-btn-1';
@@ -179,7 +197,7 @@ messages.forEach(async (message) => {
     }
 });
 
-  
+  answerAddDiv.appendChild(dugmeSub);
   answerAddDiv.appendChild(input);
   answerAddDiv.appendChild(answerBtn1);
   answerAddDiv.appendChild(answerBtn2);
@@ -213,8 +231,8 @@ async function sendMessage(userId, roomId, message) {
         .then(response => {
              const chatBodyDiv = document.getElementById("chatBodyContainer");
          chatBodyDiv.innerHTML="";
-           sendMessageinRoom(roomId, message);
-
+           sendMessageinRoom(roomId,requestBody);
+           
            fetchMessages(roomId);
         })
         .then(data => {
@@ -229,7 +247,7 @@ async function sendMessage(userId, roomId, message) {
           {
             console.log(roomName);
             try {
-                await connection.invoke("SendMessage", message, roomName);
+                await window.connection.invoke("SendMessage", message, roomName);
                 console.log(`Successfully send: ${roomName}`);
             } catch (err) {
                 console.error(`Error sending message: ${err}`);
@@ -237,10 +255,98 @@ async function sendMessage(userId, roomId, message) {
    
           }
 
+          async function SubscribeToRoom(roomName, div) {
+             
+             const connection = new signalR.HubConnectionBuilder()
+                 .withUrl("http://localhost:5142/hubs/ChatHub")  // Postavite odgovarajući URL za vaš Hub
+                 .build();
+            
+             
+             console.log(connection);
+             try {
+             var decode = new Decode();
+             var korisnik = await decode.vratiKorisnika();
+             await connection.start();
+             window.connection = connection;
+             joinRoom(roomName);
+             connection.on("message", (message) => {
+                 console.log(`Received message: ${message}`);
+                if(korisnik.id == message.from)
+                {
+                  var answerClass = "left";
+                  var answerDiv = document.createElement("div");
+                  answerDiv.classList.add("answer", answerClass);
+
+                  var avatarDiv = document.createElement("div");
+                  avatarDiv.classList.add("avatar");
+                  var avatarImg = document.createElement("img");
+
+                  avatarDiv.appendChild(avatarImg);
+
+                  var statusDiv = document.createElement("div");
+
+                  answerDiv.appendChild(avatarDiv);
+
+                  var nameDiv = document.createElement("div");
+                  nameDiv.classList.add("name");
+                  nameDiv.textContent = message.from;
+                  answerDiv.appendChild(nameDiv);
+
+                  var textDiv = document.createElement("div");
+                  textDiv.classList.add("text");
+                  textDiv.textContent = message.message;
+                  answerDiv.appendChild(textDiv);
+
+                  var timeDiv = document.createElement("div");
+                  timeDiv.classList.add("time");
+                  timeDiv.textContent = message.date;
+                  answerDiv.appendChild(timeDiv);
+              
+
+                 div.appendChild(answerDiv); 
+                }
+                
+
+                
+             });
+             console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
+              
+             await connection.invoke("Subscribe", roomName);
+             console.log(`Subscribed to room: ${roomName}`);
+             } catch (error) {
+                 console.error(`Error establishing SignalR connection or subscribing to room: ${error}`);
+             }
+             }
+ 
+             
+             async function joinRoom(roomName) {
+             try {
+                 await window.connection.invoke("JoinRoom", roomName);
+                 console.log(`Successfully joined room: ${roomName}`);
+                
+             } catch (err) {
+                 console.error(`Error joining room: ${err}`);
+             
+             }
+           }
+ 
+          
+           async function subscribe(roomName)
+           {
+             console.log(roomName);
+             try {
+                 await connection.invoke("Subscribe", roomName);
+                 console.log(`Successfully subscribe: ${roomName}`);
+             } catch (err) {
+                 console.error(`Error sending message: ${err}`);
+             }
+    
+           }
+
 
 
 </script>
-
+   
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.6.8-fix/jquery.nicescroll.min.js"></script>

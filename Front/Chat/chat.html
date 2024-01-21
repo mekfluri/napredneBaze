@@ -145,17 +145,17 @@ fetch('http://localhost:5142/Chat/getAllRooms')
 
             userDiv.appendChild(nameDiv);
 
-             const   subscribeBtn = document.createElement('span');
+           /* const   subscribeBtn = document.createElement('span');
            subscribeBtn.className = 'button-68';
              subscribeBtn.innerHTML = 'subscribe';
             subscribeBtn.onclick = async (ev) => {
             const roomName = room.roomName;
             await SubscribeToRoom(roomName);
     
-        };
+        };*/
 
    
-         chatUsersDiv.appendChild( subscribeBtn);
+         //chatUsersDiv.appendChild( subscribeBtn);
             chatUsersDiv.appendChild(userDiv);
             
                    
@@ -198,16 +198,16 @@ async function saveRoom(userId, roomName) {
 
  async function SubscribeToRoom(roomName, div) {
              
-            connection = new signalR.HubConnectionBuilder()
+            const connection = new signalR.HubConnectionBuilder()
                 .withUrl("http://localhost:5142/hubs/ChatHub")  // Postavite odgovarajući URL za vaš Hub
                 .build();
-
+            window.connection = connection;
             console.log(connection);
             try {
             await connection.start();
             connection.on("message", (message) => {
                 console.log(`Received message: ${message}`);
-                dodajPoruku(chatBodyDiv, message);
+               
             });
             console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
              
@@ -248,7 +248,7 @@ async function saveRoom(userId, roomName) {
     storyIframe.src = `http://127.0.0.1:5501/Front/Chat/room.html?dataId=${roomId}`;
     storyIframe.style.width = '700px';
     storyIframe.style.height = '700px';
-
+    localStorage.setItem("roomId", roomId);
     var content = document.getElementById('chatBodyContainer');
     content.innerHTML="";
     

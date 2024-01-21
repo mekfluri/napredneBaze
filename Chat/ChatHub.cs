@@ -71,11 +71,9 @@ namespace napredneBaze.Chat.ChatHub
                 //Console.WriteLine(Clients.Group(roomName));
 
                 await Clients.Group(roomName).SendAsync("message", message);
-                //redisDatabase = redis.GetDatabase();
                 Console.WriteLine("cao");
                 string key = $"{roomName}";
-                double score = 1.0; // Postavite željeni rezultat za sortiranje
-                 await  _redisDatabase.SortedSetAddAsync(roomName, JsonConvert.SerializeObject(message), (double)message.Date);
+                await  _redisDatabase.SortedSetAddAsync(roomName, JsonConvert.SerializeObject(message), (double)message.Date);
 
            
 
