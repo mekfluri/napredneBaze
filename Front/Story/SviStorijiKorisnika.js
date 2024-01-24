@@ -235,18 +235,20 @@ async function Like(storyId,  likesLink) {
         var decode=new Decode();
         var korisnik=await decode.vratiKorisnika();
 
-        const userId = korisnik.id;
+        var userId = korisnik.id;
 
-        const response = await fetch(`http://localhost:5142/Story/likeStory/${storyId}/${userId}`, {
+        var response = await fetch(`http://localhost:5142/Story/likeStory/${storyId}/${userId}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
         });
-        console.log("prvi rezultat:", response);
-        if (response == null) {
-            response = await fetch(`http://localhost:5142/Story/unlikeStory/${storyId}/${userId}`, {
+        var result = await response.json();
+        console.log(result);
+        
+        if (result.errorMessage == 'User already liked the story') {
+            var response1 = await fetch(`http://localhost:5142/Story/unlikeStory/${storyId}/${userId}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -255,11 +257,12 @@ async function Like(storyId,  likesLink) {
             });
         }
 
-        const result = await response.json();
-        likesLink.querySelector('strong').textContent = result.newNumLikes;
-
+        result = await response1.json();
+        console.log(result)
+        //likesLink.querySelector('strong').textContent = result.message;
+        
        
-        return cardBodyDivId;
+        //return cardBodyDivId;
        
     } catch (error) {
         console.error(`Error liking story: ${error.message}`);

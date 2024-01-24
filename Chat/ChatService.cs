@@ -149,21 +149,30 @@ private bool IsJson(string value)
 
         public async Task<string> CreateRoom(string creatorUser, string roomName)
         {
-            var roomId = $"{creatorUser}";
-
-            var roomExists = await _database.KeyExistsAsync($"room:{roomId}:name");
-
-            if (!roomExists)
+            try
             {
-                await _database.StringSetAsync($"room:{roomId}:name", roomName);
-                await _database.SetAddAsync($"user:{creatorUser}:rooms", roomId);
-                await _database.SetAddAsync("allRooms", roomId);
+               var random = new Random();
+               var roomId = random.Next(10000, 100000).ToString();
 
-                return roomId;
+                var roomExists = await _database.KeyExistsAsync($"room:{roomId}:name");
+
+                if (!roomExists)
+                {
+                    await _database.StringSetAsync($"room:{roomId}:name", roomName);
+                    await _database.SetAddAsync($"user:{creatorUser}:rooms", roomId);
+                    await _database.SetAddAsync("allRooms", roomId);
+
+                    return roomId;
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine($"Greška prilikom stvaranja sobe: {ex.Message}");
+                throw; 
             }
         }
 

@@ -22,11 +22,11 @@ export class User {
         this.dodajStory = document.getElementById("dodajStory");
         this.chatRooms = document.getElementById("Chats");
         this.editPhoto = document.getElementById("editPhoto");
-        this.editPhotoo = document.getElementById("editPhoto1");
+
         this.azuriraj = document.getElementById("editPhoto2");
 
 
-        this.ime = document.getElementById("ime"); // Dodao sam this.ime
+        this.ime = document.getElementById("ime"); 
         this.searchButton.addEventListener("click", () => {
             console.log("Kliknuto!");
             this.pretraga();
@@ -52,10 +52,7 @@ export class User {
         window.location.href = "http://127.0.0.1:5501/Front/Chat/chat.html";
         });
 
-        this.editPhotoo.addEventListener("click", () => {
-          
-            this.saveImageToNeo4j();
-        });
+     
         this.dodajStory.addEventListener("click", () => {
           
             this.dodajNoviStory();
@@ -390,6 +387,7 @@ export class User {
             .then(data => {
                localStorage.setItem('slika', data.message);
                this.ProfilePicture = data.message;
+               this.saveImageToNeo4j();
               
                alert(data.message);
                
@@ -446,18 +444,14 @@ export class User {
 
     prikazSlike(){
 
-        var labela = document.getElementById('label');
         
-        labela.style.display = (labela.style.display === "none" || labela.style.display === "") ? "flex" : "none";
         var input = document.getElementById('uploadInput');
         
         input.style.display = (input.style.display === "none" || input.style.display === "") ? "flex" : "none";
         var dugme = document.getElementById('editPhoto');
         
         dugme.style.display = (dugme.style.display === "none" || dugme.style.display === "") ? "flex" : "none";
-        var dugme1 = document.getElementById('editPhoto1');
         
-        dugme1.style.display = (dugme1.style.display === "none" || dugme1.style.display === "") ? "flex" : "none";
 
     }
 

@@ -32,9 +32,9 @@ namespace napredneBaze
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            neo4jUri = new Uri("bolt://184.72.200.89:7687");
+            neo4jUri = new Uri("bolt://localhost:7687");
             neo4jUser = "neo4j";
-            neo4jPassword = "numeral-transistor-procurement";
+            neo4jPassword = "password";
         }
         public void ConfigureServices(IServiceCollection services)
         {

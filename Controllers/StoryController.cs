@@ -1,5 +1,6 @@
 namespace napredneBaze.Controllers;
 using napredneBaze.Models;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 
@@ -24,20 +25,19 @@ public class StoryController : ControllerBase
             return BadRequest("Invalid userId");
         }
 
-        // Retrieve story data from query string or route parameters
-        string storyText = tekst; // Assuming story content is in the `tekst` route parameter
-
-        // Validate story data (if applicable)
+        
+        string storyText = tekst; 
+      
         if (string.IsNullOrEmpty(storyText))
         {
             return BadRequest("Story content is required");
         }
 
-        // Create a Story object with the retrieved data
+        
         Story story = new Story
         {
             Creator = userId,
-            Url = storyText, // Assuming Url is intended for storyText
+            Url = storyText, 
             Id = Guid.NewGuid(),
             DateTimeCreated = DateTime.Now
         };
@@ -101,31 +101,7 @@ public class StoryController : ControllerBase
         }
     }
 
-    /*
-    [Route("deleteStory/{storyId}")]
-    [HttpDelete]
-    public async Task<IActionResult> DeleteStory(string storyId)
-    {
-        if (string.IsNullOrEmpty(storyId))
-        {
-            return BadRequest("Invalid storyId");
-        }
 
-        await _client.Cypher
-            .Match("(:User)-[viewRel:Viewed]->(s:Story)")
-            .Where((Story s) => s.Id.ToString() == storyId)
-            .Delete("viewRel")
-            .ExecuteWithoutResultsAsync();
-
-        await _client.Cypher
-            .Match("(usr:User)-[p:Published]->(str:Story)")
-            .Where((Story str) => str.Id.ToString() == storyId)
-            .Delete("p, str")
-            .ExecuteWithoutResultsAsync();
-
-        return Ok();
-    }
-    */
     [Route("deleteStory/{storyId}")]
     [HttpDelete]
     public async Task<IActionResult> DeleteStory(string storyId)
@@ -137,28 +113,28 @@ public class StoryController : ControllerBase
 
         var session = _client.Cypher;
 
-        // Prvo obrišite odnose gde je priča označena kao "Published"
+       
         await session
             .Match("(usr:User)-[p:Published]->(str:Story)")
             .Where((Story str) => str.Id.ToString() == storyId)
             .Delete("p")
             .ExecuteWithoutResultsAsync();
 
-        // Zatim obrišite odnose gde je priča označena kao "Liked"
+       
         await session
             .Match("(:User)-[likedRel:Liked]->(s:Story)")
             .Where((Story s) => s.Id.ToString() == storyId)
             .Delete("likedRel")
             .ExecuteWithoutResultsAsync();
 
-        // Na kraju, obrišite odnose gde je priča označena kao "PartOfHighlights" i samu priču
+      
         await session
             .Match("(:User)-[partOfRel:PART_OF_HIGHLIGHTS]->(str:Story)")
             .Where((Story str) => str.Id.ToString() == storyId)
             .Delete("partOfRel, str")
             .ExecuteWithoutResultsAsync();
 
-        // Sada možete obrisati sam čvor (priču)
+      
         await session
             .Match("(str:Story)")
             .Where((Story str) => str.Id.ToString() == storyId)
@@ -189,47 +165,6 @@ public class StoryController : ControllerBase
 
         return Ok();
     }
-
-
-
-    [Route("getFriendsStories/{myId}")]
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Story>>> GetFriendsStories(string myId)
-    {
-        if (string.IsNullOrEmpty(myId))
-        {
-            return BadRequest("Invalid myId");
-        }
-
-        var followingsQuery = _client.Cypher
-            .Match("(u:User)-[:Following]->(f:User)")
-            .Where((User u) => u.Id == myId)
-            .Return(f => f.As<User>().Id);
-
-        var followings = await followingsQuery.ResultsAsync;
-
-        var storiesQuery = _client.Cypher
-            .Match("(u:User)-[:Published]->(s:Story)")
-            .Where((User u) => followings.Contains(u.Id))
-            .Return(s => s.As<Story>());
-
-        var allStories = (await storiesQuery.ResultsAsync).ToList();
-
-        // Fisher-Yates algoritam
-        var random = new Random();
-        int n = allStories.Count;
-        while (n > 1)
-        {
-            n--;
-            int k = random.Next(n + 1);
-            var value = allStories[k];
-            allStories[k] = allStories[n];
-            allStories[n] = value;
-        }
-
-        return Ok(allStories);
-    }
-
 
 
     [Route("getLikesCount/{storyId}")]
@@ -274,7 +209,7 @@ public class StoryController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Handle exceptions appropriately
+           
             return StatusCode(500, $"Internal Server Error: {ex.Message}");
         }
     }
@@ -339,7 +274,16 @@ public class StoryController : ControllerBase
 
         if (likedRelationshipExists.Any())
         {
-            return BadRequest("User already liked the story");
+            var response = new
+            {
+                errorMessage = "User already liked the story"
+            };
+
+           
+            return new JsonResult(response)
+            {
+                StatusCode = (int)HttpStatusCode.BadRequest
+            };
         }
 
         await _client.Cypher
@@ -356,10 +300,10 @@ public class StoryController : ControllerBase
 
 
         var likedStories = await _client.Cypher
-    .Match("(s:Story { Id: $storyId })")
-    .WithParam("storyId", storyId)
-    .Return(s => s.As<Story>())
-    .ResultsAsync;
+            .Match("(s:Story { Id: $storyId })")
+            .WithParam("storyId", storyId)
+            .Return(s => s.As<Story>())
+            .ResultsAsync;
 
         var likedStory = likedStories.FirstOrDefault(); 
 
@@ -429,7 +373,16 @@ public class StoryController : ControllerBase
             .Set("s.NumLikes = CASE WHEN s.NumLikes > 0 THEN s.NumLikes - 1 ELSE 0 END")
             .ExecuteWithoutResultsAsync();
 
-        return Ok($"User {userId} unliked the story {storyId}");
+        var response = new
+        {
+            message = $"User {userId} unliked the story {storyId}"
+        };
+
+        
+        return new JsonResult(response)
+        {
+            StatusCode = (int)HttpStatusCode.OK
+        };
     }
 
     [Route("getStoriesByHighlightId/{highlightId}")]

@@ -24,6 +24,7 @@ namespace napredneBaze.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
+    //omogucava komunikaciju izmedju 2 servica
     private readonly IGraphClient _client;
     private readonly UserManager<AppUser> _userManager;
     private IConfiguration _configuration;
@@ -134,22 +135,6 @@ public class UserController : ControllerBase
                 //Hhoroscope = reg.horoscope
                 //Number = reg.Phone
             };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             try
             {
                 var result = await _userManager.CreateAsync(applicationUser, reg.Password);
@@ -302,7 +287,6 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         }
         catch (Exception ex)
         {
-            // Logovanje greške ili dodatna obrada
             return StatusCode(500, new { Message = "Došlo je do greške prilikom ažuriranja slike.", Error = ex.Message });
         }
     }
@@ -495,19 +479,19 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
     [HttpPut]
     public async Task<IActionResult> addFriend(string userId, string friendId)
     {
-        // Check if a friendship already exists
+        
         var following = await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
             .Where((User usr1) => usr1.Id == userId)
             .AndWhere((User usr2) => usr2.Id == friendId)
             .With("usr1, usr2, exists((usr1)-[:je_prijatelj|REQUESTED_FRIENDSHIP]->(usr2)) as ret")
             .Return(ret => ret.As<bool>()).ResultsAsync;
 
-        if (following.Single())
+        if (following.Single())//samo jedan rezultat single
         {
             return Ok("You are already friends or a request is pending.");
         }
 
-        // Create the request relationship
+        
         await _client.Cypher.Match("(usr1:User)", "(usr2:User)")
             .Where((User usr1) => usr1.Id == userId)
             .AndWhere((User usr2) => usr2.Id == friendId)
@@ -733,7 +717,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
         return Ok(users.Count());
     }
 
-    //zajednicki prijatelji 
+    
     [Route("getCommonFriends/{user1Id}/{user2Id}")]
     [HttpGet]
     public async Task<IActionResult> getCommonFriends(string userId1, string userId2)
@@ -755,35 +739,7 @@ public async Task<ActionResult<User>> Login([FromBody] Login log)
 
 
 
-    /*
-    [Route("getUserFollowers/{userId}")]
-    [HttpGet]
-    public async Task<IActionResult> GetUserFollowers(string userId)
-    {
-        var users = await _client.Cypher.Match("(d:User)<-[Following]-(f:User)")
-                                              .Where((User d) => d.Id == userId)
-                                              .Return(f => new {
-                                                  Id = f.As<User>().Id,
-                                                  UserName = f.As<User>().UserName,
-                                                  Email = f.As<User>().Email,
-                                                  ProfilePicture = f.As<User>().ProfilePicture,
-                                                  ProfileDescription = f.As<User>().ProfileDescription
-                                              }).ResultsAsync;
-
-        return Ok(users);
-    }
-
-    [Route("getUserFollowersCount/{userId}")]
-    [HttpGet]
-    public async Task<IActionResult> GetUserFollowersCount(string userId)
-    {
-        var users = await _client.Cypher.Match("(d:User)<-[Following]-(f:User)")
-
-                                              .Where((User d) => d.Id == userId)
-                                              .Return(f => f.As<User>()).ResultsAsync;
-
-        return Ok(users.Count());
-    }*/
+ 
 
 
 

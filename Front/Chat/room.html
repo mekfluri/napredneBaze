@@ -271,7 +271,7 @@ async function sendMessage(userId, roomId, message) {
              joinRoom(roomName);
              connection.on("message", (message) => {
                  console.log(`Received message: ${message}`);
-                if(korisnik.id == message.from)
+                if(korisnik.id != message.from)
                 {
                   var answerClass = "left";
                   var answerDiv = document.createElement("div");

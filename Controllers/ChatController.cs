@@ -42,15 +42,26 @@ namespace napredneBaze.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateRoom(string userId, string roomName)
         {
-            var roomId = await _service.CreateRoom(userId, roomName); // Pass the roomName
-            if (roomId != null)
+            try
             {
-                return Ok(new { RoomId = roomId });
+                var roomId = await _service.CreateRoom(userId, roomName);
+
+                if (roomId != null)
+                {
+                    return Ok(new { RoomId = roomId });
+                }
+                else
+                {
+                    return BadRequest("Room creation failed");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest("Room creation failed"); // or handle failure as needed
+               
+                Console.WriteLine($"Greška prilikom stvaranja sobe: {ex.Message}");
+                return StatusCode(500, "Internal Server Error");
             }
+
         }
 
         [Route("getAllRooms")]

@@ -38,25 +38,25 @@ namespace napredneBaze.Controllers
 
             try
             {
-                // Create the highlight node
+                
                 await _client.Cypher.Create("(h:Highlight $highlight)")
                     .WithParam("highlight", highlight)
                     .ExecuteWithoutResultsAsync();
 
-                // Find the user node by userId
+                
                 var userExists = await _client.Cypher
                     .Match("(u:User)")
                     .Where((User u) => u.Id == userId)
                     .Return(u => u.As<User>())
                     .ResultsAsync;
 
-                // Check if the user exists
+               
                 if (!userExists.Any())
                 {
                     return BadRequest("User not found");
                 }
 
-                // Create the relationship [:HAS_HIGHLIGHT]
+                
                 await _client.Cypher.Match("(u:User)", "(h:Highlight)")
                     .Where((User u) => u.Id == userId)
                     .AndWhere((Highlight h) => h.Id == highlight.Id)
@@ -72,39 +72,7 @@ namespace napredneBaze.Controllers
         }
 
 
-        /*[HttpPost]
-        [Route("{highlightId}/AddStory/{storyId}")]
-        public async Task<IActionResult> AddStoryToHighlight(string highlightId, string storyId)
-        {
-            try
-            {
-                await _client.Cypher.Match("(h:Highlight { Id: $highlightId })")
-                    .Match("(s:Story { Id: $storyId })")
-                    .Create("(s)-[:PART_OF_HIGHLIGHT]->(h)")
-                    .WithParam("highlightId", highlightId)
-                    .WithParam("storyId", storyId)
-                    .ExecuteWithoutResultsAsync();
-
-                var responseObj = new
-                {
-                    Message = $"Story with id {storyId} added to Highlight with id {highlightId}",
-                    Success = true
-                };
-
-                return Ok(responseObj);
-            }
-            catch (Exception ex)
-            {
-                var errorResponseObj = new
-                {
-                    Message = "Error adding story to Highlight",
-                    Success = false,
-                    ErrorDetails = ex.Message 
-                };
-
-                return StatusCode(500, errorResponseObj);
-            }
-        } */
+      
 
         [HttpPost]
         [Route("{highlightId}/AddStory/{storyId}")]
@@ -112,7 +80,7 @@ namespace napredneBaze.Controllers
         {
             try
             {
-                // Provera da li stori već postoji u highlight-u
+               
                 var storyExistsCount = await _client.Cypher
                      .Match("(s:Story { Id: $storyId })-[:PART_OF_HIGHLIGHT]->(h:Highlight { Id: $highlightId })")
                     .WithParam("highlightId", highlightId)
@@ -120,7 +88,7 @@ namespace napredneBaze.Controllers
                     .Return(s => s.Count())
                     .ResultsAsync;
 
-                var storyExists = storyExistsCount.FirstOrDefault(); // Dobijamo prvi rezultat iz brojača
+                var storyExists = storyExistsCount.FirstOrDefault(); 
 
                 if (storyExists > 0)
                 {
@@ -133,7 +101,7 @@ namespace napredneBaze.Controllers
                     return Conflict(existingResponseObj); // Koristimo Conflict (HTTP status code 409) da bismo označili konflikt
                 }
 
-                // Dodavanje stori-a u highlight
+                
                 await _client.Cypher.Match("(h:Highlight { Id: $highlightId })")
                     .Match("(s:Story { Id: $storyId })")
                     .Create("(s)-[:PART_OF_HIGHLIGHT]->(h)")
@@ -181,10 +149,10 @@ namespace napredneBaze.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception for further analysis
+                
                 Console.WriteLine($"Error retrieving Highlights: {ex.Message}");
 
-                // Return a more detailed error message in the response
+                
                 return StatusCode(500, $"Error retrieving Highlights: {ex.Message}");
             }
         }
@@ -198,7 +166,7 @@ namespace napredneBaze.Controllers
         {
             try
             {
-                // Delete all highlights and their relationships
+                
                 await _client.Cypher.Match("(h:Highlight)-[r]-()")
                     .Delete("h, r")
                     .ExecuteWithoutResultsAsync();

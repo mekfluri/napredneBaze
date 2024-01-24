@@ -104,9 +104,6 @@
     
         
     }
-            
-            const roomName = room.roomName;
-          await SubscribeToRoom(roomName);
         
         };
    leftColInsideDiv.appendChild(el);
@@ -182,16 +179,35 @@ rightColumnDiv.appendChild(rightColInsideDiv);
 
 
 
-async function saveRoom(userId, roomName) {
+async function saveRoom(room, roomName) {
 
 
- 
-  try {       const url = `http://localhost:5142/Chat/createRoom/${userId}/${roomName}`;
-                         
-                            await fetch(url, { method: 'POST' });
-                         } catch (error) {
-                            console.error("Error:", error.message);
-                        }
+    var userId = '987456'
+    console.log(roomName)
+    try {
+    const url = `http://localhost:5142/Chat/createRoom/${userId}/${roomName}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        //body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Rezultat:", result);
+    } catch (error) {
+        console.error("Greška:", error.message);
+
+        if (error.response) {
+            console.error("Odgovor servera:", await error.response.json());
+        }
+    }
+
 
         location.reload();
                     }

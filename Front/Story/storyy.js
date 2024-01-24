@@ -1,3 +1,5 @@
+import { Decode } from "http://127.0.0.1:5501/Front/decode.js";
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Fetch user ID
@@ -79,7 +81,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                  
                     const result = await Like(cardBodyDiv.id);
-                    console.log(result); 
+                    location.reload()
+                     
                 } catch (error) {
                     console.error(`Error liking story: ${error.message}`);
                 }
@@ -120,39 +123,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 async function Like(storyId,  likesLink) {
     try {
-        const userIdResponse = await fetch('http://localhost:5142/User/getUserCurrent', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        const userData = await userIdResponse.json();
-        const userId = userData.id;
+        var decode=new Decode();
+        var korisnik=await decode.vratiKorisnika();
 
-        const response = await fetch(`http://localhost:5142/Story/likeStory/${storyId}/${userId}`, {
+        var userId = korisnik.id;
+        console.log(storyId)
+
+        var response = await fetch(`http://localhost:5142/Story/likeStory/${storyId}/${userId}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
         });
-        console.log("prvi rezultat:", response);
-        if (response == null) {
-            response = await fetch(`http://localhost:5142/Story/unlikeStory/${storyId}/${userId}`, {
+        var result = await response.json();
+        console.log(result);
+        
+        if (result.errorMessage == 'User already liked the story') {
+            var response1 = await fetch(`http://localhost:5142/Story/unlikeStory/${storyId}/${userId}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
+
         }
 
-        const result = await response.json();
-        likesLink.querySelector('strong').textContent = result.newNumLikes;
-
+        result = await response1.json();
+        console.log(result)
+        //likesLink.querySelector('strong').textContent = result.message;
+        
        
-        return cardBodyDivId;
+        //return cardBodyDivId;
+       
     } catch (error) {
         console.error(`Error liking story: ${error.message}`);
         return null;
