@@ -221,14 +221,14 @@ async function saveRoom(room, roomName) {
             console.log(connection);
             try {
             await connection.start();
+             
+            await connection.invoke("Subscribe", roomName);
+            console.log(`Subscribed to room: ${roomName}`);
             connection.on("message", (message) => {
                 console.log(`Received message: ${message}`);
                
             });
             console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
-             
-            await connection.invoke("Subscribe", roomName);
-            console.log(`Subscribed to room: ${roomName}`);
             } catch (error) {
                 console.error(`Error establishing SignalR connection or subscribing to room: ${error}`);
             }

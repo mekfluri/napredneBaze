@@ -160,20 +160,37 @@ messages.forEach(async (message) => {
   dugmeSub.innerHTML = "Posalji poruku";
   dugmeSub.className = "button-60";
     
-  
+  const unsub = document.createElement('button');
+  unsub.innerHTML = 'unsub';
+  unsub.style.display = 'none'
+
   const input = document.createElement('input');
   input.placeholder = 'Write a message';
   input.style.display = 'none';
 
-  dugmeSub.addEventListener("click", () => {
+  dugmeSub.addEventListener("click", async () => {
           var roomId = localStorage.getItem("roomId");
-          SubscribeToRoom(roomId,  chatBodyDiv);
+          await SubscribeToRoom(roomId,  chatBodyDiv);
           input.style.display = 'flex';
           dugmeSub.style.display = 'none'; 
+          unsub.style.display = 'flex';
          
       });
 
-  
+      unsub.addEventListener('click', async (event) => {
+        try {
+            var roomId = localStorage.getItem("roomId");
+            await window.connection.invoke("Unsubscribe",roomId );
+            console.log(`Unsubscribed from channel: ${roomId}`);
+            dugmeSub.style.display = 'flex'; 
+            input.style.display = 'none';
+            unsub.style.display = 'none';
+
+        } catch (error) {
+            console.error(error.toString());
+        }
+     
+    });
 
   
   const answerBtn1 = document.createElement('span');
@@ -199,6 +216,7 @@ messages.forEach(async (message) => {
 
   answerAddDiv.appendChild(dugmeSub);
   answerAddDiv.appendChild(input);
+  answerAddDiv.appendChild(unsub);
   answerAddDiv.appendChild(answerBtn1);
   answerAddDiv.appendChild(answerBtn2);
 
@@ -258,7 +276,7 @@ async function sendMessage(userId, roomId, message) {
           async function SubscribeToRoom(roomName, div) {
              
              const connection = new signalR.HubConnectionBuilder()
-                 .withUrl("http://localhost:5142/hubs/ChatHub")  // Postavite odgovarajući URL za vaš Hub
+                 .withUrl("http://localhost:5142/hubs/ChatHub")  
                  .build();
             
              
@@ -268,7 +286,9 @@ async function sendMessage(userId, roomId, message) {
              var korisnik = await decode.vratiKorisnika();
              await connection.start();
              window.connection = connection;
-             joinRoom(roomName);
+             await joinRoom(roomName);
+             await connection.invoke("Subscribe", roomName);
+             console.log(`Subscribed to room: ${roomName}`);
              connection.on("message", (message) => {
                  console.log(`Received message: ${message}`);
                 if(korisnik.id != message.from)
@@ -311,8 +331,7 @@ async function sendMessage(userId, roomId, message) {
              });
              console.log(`SignalR connection established. Connection ID: ${connection.connectionId}`);
               
-             await connection.invoke("Subscribe", roomName);
-             console.log(`Subscribed to room: ${roomName}`);
+             
              } catch (error) {
                  console.error(`Error establishing SignalR connection or subscribing to room: ${error}`);
              }

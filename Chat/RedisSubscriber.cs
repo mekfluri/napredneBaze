@@ -5,6 +5,7 @@ namespace napredneBaze.Chat
     public class RedisSubscriber
     {
         private readonly ISubscriber _sub;
+        //rad sa bazom
         private readonly IConnectionMultiplexer _redis;
 
         public RedisSubscriber(IConnectionMultiplexer redis)

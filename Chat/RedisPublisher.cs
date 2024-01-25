@@ -16,6 +16,10 @@ namespace napredneBaze.Chat
 
         public void Publish(string channel, string message)
         {
+            Console.WriteLine("Poslato");
+            Console.WriteLine(message);
+            
+            Console.WriteLine(channel);
             _db.Publish(channel, message);
         }
     }

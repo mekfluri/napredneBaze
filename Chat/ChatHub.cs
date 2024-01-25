@@ -16,6 +16,7 @@ namespace napredneBaze.Chat.ChatHub
 
 
         private readonly RedisSubscriber _subscriber;
+        private readonly RedisPublisher _redisPublisher;
         private readonly IConnectionMultiplexer _redis;
         private readonly IDatabase _redisDatabase;
 
@@ -26,6 +27,7 @@ namespace napredneBaze.Chat.ChatHub
             _redis = redis;
             _redisDatabase = _redis.GetDatabase();
             _subscriber = new RedisSubscriber(_redis);
+            _redisPublisher = new RedisPublisher();
         }
 
 
@@ -35,11 +37,31 @@ namespace napredneBaze.Chat.ChatHub
         }
         public async Task Subscribe(string channel)
         {
-            //dodajemo trenutnu signalir vezu i kanal 
-            await Groups.AddToGroupAsync(Context.ConnectionId, channel);
-            //kada stigne poruka na tom kanalu izvrsice se funkcija koja je prosledjna kao parametar
-            _subscriber.Subscribe(channel, (c, m) => Clients.Group(channel).SendAsync("message", m));
+            try
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, channel);
+
+                _subscriber.Subscribe(channel, async (c, m) => {
+                    try
+                    {
+                        Console.WriteLine($"Primljena poruka na kanalu {channel}: {m}");
+                        //ovaj klijent zeza
+
+                        
+                        await Clients.Group(channel).SendAsync("message", m);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Greška pri slanju poruke na klijentsku stranu: {ex.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Greška pri dodavanju u grupu: {ex.Message}");
+            }
         }
+
 
         public async Task Unsubscribe(string channel)
         {
@@ -53,7 +75,7 @@ namespace napredneBaze.Chat.ChatHub
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
         }
 
-        public async Task SubscribeRoom(string roomName)
+       public async Task SubscribeRoom(string roomName)
         {
             _subscriber.Subscribe(roomName, (c, m) => Clients.Group(roomName).SendAsync("message", m));
         }
@@ -63,17 +85,19 @@ namespace napredneBaze.Chat.ChatHub
         {
             await Clients.Group(roomName).SendAsync("message", message);
         }
+        
 */
+        
         public async Task SendMessage(RoomMessage message, string roomName)
         {
             try
             {
-                //Console.WriteLine(Clients.Group(roomName));
 
-                await Clients.Group(roomName).SendAsync("message", message);
-                Console.WriteLine("cao");
-                string key = $"{roomName}";
-                await  _redisDatabase.SortedSetAddAsync(roomName, JsonConvert.SerializeObject(message), (double)message.Date);
+               await Clients.Group(roomName).SendAsync("message", message);
+               string poruka = message.Message;
+
+                _redisPublisher.Publish(roomName, poruka);
+                await  _redisDatabase.SortedSetAddAsync(roomName, JsonConvert.SerializeObject(message),1 );
 
            
 
